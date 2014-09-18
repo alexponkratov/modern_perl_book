@@ -1,87 +1,78 @@
-=encoding utf-8
-
-=head1 CPAN
+=head1 The CPAN
 
 Z<cpan>
 
-Perl 5 E<mdash> прагматичный язык сам по себе, но ещё более прагматичное
-Perl-сообщество расширило этот язык и сделало свою работу доступной для всего
-мира. Если у вас есть требующая решения задача, велики шансы, что кто-то уже
-написал код на Perl для её решения E<mdash> и поделился им.
+Perl is a pragmatic language, and the availability of tens of thousands of
+freely reusable Perl libraries demonstrates that pragmatism. If you have a
+problem to solve, chances are the global Perl community has already
+written--and shared--code to solve it.
 
 X<CPAN>
 
-Программирование в Современном Perl подразумевает активное использование CPAN
-(U<http://www.cpan.org/>). Comprehensive Perl Archive Network (Всеобъемлющая
-архивная сеть Perl) E<mdash> система загрузки и зеркалирования свободно
-распространяемого, повторно используемого кода на Perl. Это один из самых,
-если не I<самый> большой архив программных библиотек в мире.
-CPAN предлагает библиотеки для всего, от доступа к базам данных, инструментов
-профилирования и реализации протоколов для практически всех когда-либо
-созданных сетевых устройств до звуковых и графических библиотек и обёрток для
-разделяемых библиотек в вашей системе.
+Modern Perl programming makes heavy use of the CPAN (U<http://www.cpan.org/>).
+The Comprehensive Perl Archive Network is an uploading and mirroring system for
+redistributable, reusable Perl code. It's one of--if not I<the>--largest
+archives of libraries of code in the world. The CPAN offers libraries for
+everything from database access to profiling tools to protocols for almost
+every network device ever created to sound and graphics libraries and wrappers
+for shared libraries on your system.
 
-Современный Perl без CPAN E<mdash> всего лишь очередной язык. Современный Perl
-с CPAN E<mdash> изумителен.
+Modern Perl without the CPAN is just another language. Modern Perl with the
+CPAN is a powerful toolkit for solving problems.
 
 X<distribution>
 X<modules>
 
-CPAN хранит I<дистрибутивы> E<mdash> коллекции повторно используемого Perl-кода.
-Один дистрибутив может содержать один или несколько I<модулей>, самодостаточных
-библиотек Perl-кода. Каждый дистрибутив занимает своё собственное пространство
-имён в CPAN и предоставляет уникальные метаданные.
+CPAN mirrors I<distributions>, or collections of reusable Perl code. A single
+distribution can contain one or more I<modules>, or self-contained libraries of
+Perl code. Each distribution occupies its own CPAN namespace and provides
+unique metadata.
 
-=begin tip CPAN E<mdash> Большой, Реально Большой
+=begin tip The CPAN is Big, Really Big
 
-В CPAN I<добавляются> сотни зарегистрированных контрибуторов и тысячи
-индексированных модулей в сотнях дистрибутивов каждый месяц. Эти цифры не
-учитывают обновления. В конце ноября 2011 года search.cpan.org сообщал
-о 9 359 аплоадерах, 101 656 модулях и 23 808 дистрибутивах (что означает
-показатели роста в 11,5%, 19,4% и 14.3% со времени предыдущего издания этой
-книги соответственно).
+The CPAN I<adds> hundreds of registered contributors and thousands of indexed
+modules in hundreds of distributions every month. Those numbers do not take
+into account updates. In January 2014, search.cpan.org reported 11021
+uploaders, 129039 modules, and 29068 distributions (representing growth rates
+of 15.1%, 21.2%, and 18.1% since the previous edition of this book,
+respectively).
 
 =end tip
 
 X<search.cpan.org>
+X<metacpan.org>
 
-Сам по себе CPAN E<mdash> всего лишь зеркалирующий сервис. Авторы загружают свои
-дистрибутивы, и CPAN отправляет их на сайты-зеркала, с которых пользователи и
-CPAN-клиенты скачивают, конфигурируют, собирают, тестируют и устанавливают их.
-Система успешна из-за своей простоты и вклада тысяч добровольцев, строящих свою
-работу на этой системе распространения. В частности, развитие стандартов
-сообщества определило атрибуты и характеристики правильно построенного
-CPAN-дистрибутива. Они включают:
+The CPAN itself is merely a mirroring service. Authors upload distributions
+which get sent to various mirror sites from which CPAN clients download,
+configure, build, test, and install them. This simplicity has served Perl well,
+by enabling the contributions of thousands of volunteers. In particular,
+community standards have evolved to identify the attributes and characteristics
+of well-formed CPAN distributions. These include:
 
 =over 4
 
-=item * стандарты для автоматизированных установщиков из CPAN;
+=item * the behavior of automated CPAN installers
 
-=item * cтандарты метаданных, описывающих, что предоставляет и чего ожидает
-каждый дистрибутив;
+=item * metadata to describe what each distribution provides and expects
 
-=item * стандарты документирования и лицензирования.
+=item * machine-readable documentation and licensing
 
 =back
 
-Дополнительные сервисы CPAN включают всестороннее автоматизированное
-тестирование и оповещение для улучшения качества сборок и корректности работы
-на разных платформах и версиях Perl. Каждый дистрибутив CPAN имеет свою
-собственную очередь тикетов на U<http://rt.cpan.org/> для сообщения о багах и
-работы с авторами. Кроме того, сайты CPAN ссылаются на предыдущие версии
-дистрибутивов, рейтинги модулей, комментарии к документации и т. д. Всё это
-доступно на U<http://search.cpan.org/>.
+Additional CPAN services provide comprehensive automated testing and reporting
+to improve the quality of packaging and correctness across platforms and Perl
+versions. Every CPAN distribution has its own ticket queue on
+U<http://rt.cpan.org/> for reporting bugs and working with authors. CPAN sites
+also link to previous distribution versions, module ratings, documentation
+annotations, and more. All of this is available from both
+U<http://search.cpan.org/> and U<http://metacpan.org/>.
 
 X<CPAN; C<CPAN.pm>>
-X<CPAN; C<CPANPLUS>>
 
-Установки Современного Perl включают два клиента для подключения, поиска,
-скачивания, сборки, тестирования и установки CPAN-дистрибутивов, CPAN.pm и
-CPANPLUS. По большей части, оба этих клиента равнозначны для базовой установки.
-Эта книга рекомендует использовать только CPAN.pm ввиду его повсеместного
-распространения. Со свежими версиями (последний стабильный релиз на момент
-написания E<mdash> 1.9800) установка модулей достаточно проста. Запустите клиент
-следующей командой:
+Modern Perl installations include a client to connect to, search, download,
+build, test, and install CPAN distributions; this is I<CPAN.pm>.  With a recent
+version (as of this writing, 2.0 is the latest stable release), module
+installation is reasonably easy. Start the client with:
 
 =begin screen
 
@@ -89,7 +80,7 @@ CPANPLUS. По большей части, оба этих клиента рав�
 
 =end screen
 
-Так осуществляется установка дистрибутива из клиента:
+To install a distribution within the client:
 
 =begin screen
 
@@ -98,7 +89,7 @@ CPANPLUS. По большей части, оба этих клиента рав�
 
 =end screen
 
-E<hellip>а так E<mdash> напрямую из командной строки:
+... or to install directly from the command line:
 
 =begin screen
 
@@ -108,48 +99,49 @@ E<hellip>а так E<mdash> напрямую из командной строк�
 
 X<CPAN; C<CPAN.pm>>
 
-Руководство Эрика Вильгельма (Eric Wilhelm) по конфигурированию
+Eric Wilhelm's tutorial on configuring
 CPAN.pmN<U<http://learnperl.scratchcomputing.com/tutorials/configuration/>>
-включает отличную секцию по разрешению проблем.
+includes a great troubleshooting section.
 
 =begin sidebar
 
-Хотя CPAN-клиент E<mdash> базовый модуль дистрибутивов Perl 5, вам, вероятно,
-нужно будет установить стандартные инструменты разработки, такие как утилита
-C<make> и, возможно, компилятор C. Пользователи Windows могут использовать
-Strawberry Perl (U<http://strawberryperl.com/>) и Strawberry Perl Professional.
-Пользователи Max OS X должны установить XCode. Для пользователей Unix и
-Unix-подобных систем эти инструменты зачастую уже доступны (хотя пользователям
-Debian и Ubuntu придётся установить C<build-essential>).
+Even though the CPAN client is a core module for the Perl distribution, you
+will likely need to install standard development tools such as a C<make>
+utility and possibly a C compiler. Windows users, see Strawberry Perl
+(U<http://strawberryperl.com/>) and Strawberry Perl Professional. Mac OS X
+users must install XCode. Unix and Unix-like users often have these tools
+available (though Debian and Ubuntu users should install C<build-essential>).
 
 =end sidebar
 
-=head2 Инструменты управления CPAN
+=head2 CPAN Management Tools
 
-Если ваша операционная система предоставляет собственную инсталляцию Perl 5, эта
-версия может быть устаревшей или может зависеть от определённых версий
-CPAN-дистрибутивов. Серьёзные Perl-разработчики часто возводят виртуальные стены
-между системным Perl и их собственными установками Perl, предназначенными для
-разработки. Несколько проектов помогают сделать это возможным.
+If your operating system provides its own Perl installation, that version may
+be out of date or it may have its own dependencies on specific versions of CPAN
+distributions. Serious Perl developers often construct virtual walls between
+the system Perl and their development Perl installations. Several projects help
+to make this possible.
 
-C<App::cpanminus> E<mdash> относительно новый CPAN-клиенты, нацеленный на
-скорость, простоту и отсутствие необходимой настройки. Установите его командой
-C<cpan App::cpanminus> или следующим образом:
+C<App::cpanminus> is a newer CPAN client with goals of speed, simplicity, and
+zero configuration. Install it with C<cpan App::cpanminus>, or:
 
 =begin screen
 
     $ B<curl -LO http://xrl.us/cpanm>
+    $ B<less cpanm> # review the code before running
     $ B<chmod +x cpanm>
+    $ B<./cpanm>
 
 =end screen
 
-C<App::perlbrew> E<mdash> система управления и переключения между вашими
-собственными инсталляциями нескольких версий и конфигураций Perl. Установить её
-очень просто:
+C<App::perlbrew> is a system to manage and to switch between your own
+installations of multiple versions and configurations of Perl. Installation is
+as easy as:
 
 =begin screen
 
     $ B<curl -LO http://xrl.us/perlbrew>
+    $ B<less perlbrew> # review the code before running
     $ B<chmod +x perlbrew>
     $ B<./perlbrew install>
     $ B<perldoc App::perlbrew>
@@ -159,16 +151,14 @@ C<App::perlbrew> E<mdash> система управления и переклю�
 X<CPAN; local::lib>
 X<CPAN; App::local::lib::helper>
 
-CPAN-дистрибутив C<local::lib> позволит вам устанавливать и управлять
-дистрибутивами в вашей пользовательской директории, а не в системе в целом. Это
-эффективный способ поддерживать CPAN-дистрибутивы, не затрагивая других
-пользователей. Установка несколько более сложна, чем для предыдущих двух
-дистрибутивов, хотя C<App::local::lib::helper> может упростить процесс. Смотрите
-U<http://search.cpan.org/perldoc?local::lib> и
-U<http://search.cpan.org/perldoc?App::local::lib::helper> для дальнейших
-подробностей.
+The C<local::lib> CPAN distribution allows you to install and to manage
+distributions in your own user directory, rather than for the system as a
+whole. This is an effective way to maintain CPAN distributions for individual
+users without affecting the system as a whole.  Installation is somewhat more
+involved than the previous two distributions, though C<App::local::lib::helper>
+can simplify the process.  See U<https://metacpan.org/pod/local::lib> and
+U<https://metacpan.org/pod/App::local::lib::helper> for more details.
 
-Все три проекта имеют тенденцию подразумевать Unix-подобное окружение (такое как
-GNU/Linux дистрибутив или даже Mac OS X). Пользователи Windows могут
-воспользоваться загрузкой E<laquo>всё в одномE<raquo> Padre
-(U<http://padre.perlide.org/download.html>).
+All three projects tend to assume a Unix-like environment (such
+as a GNU/Linux distribution or even Mac OS X). Windows users, see the Padre
+all-in-one download (U<http://padre.perlide.org/download.html>).

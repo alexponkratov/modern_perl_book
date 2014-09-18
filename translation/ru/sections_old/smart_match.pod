@@ -1,0 +1,87 @@
+=encoding utf-8
+
+=head1 Умное сопоставление
+
+Z<smart_match>
+
+X<smart match>
+X<operators; smart match>
+X<C<~~>; smart match operator>
+X<operators; C<~~>>
+X<builtins; C<given>>
+
+Оператор умного сопоставления, C<~~>, сравнивает два операнда и возвращает
+истинное значение, если они успешно сопоставлены. Расплывчатость определения
+демонстрирует умность оператора: тип сравнения зависит от типов обоих операндов.
+C<given> (L<given_when>) выполняет неявное умное сопоставление.
+
+X<operators; C<~~>>
+X<C<~~>; smart match operator>
+
+Оператор умного сопоставления E<mdash> инфиксный оператор:
+
+=begin programlisting
+
+    say 'They match (somehow)' if $loperand ~~ $roperand;
+
+=end programlisting
+
+Тип сравнения обычно зависит в первую очередь от типа правого операнда, а затем
+E<mdash> от левого. Например, если правый операнд E<mdash> скаляр с числовой
+составляющей, сравнение будет использовать числовое равенство. Если правый
+операнд E<mdash> регулярное выражение, сравнение будет использовать grep или
+сопоставление шаблону. Если правый операнд E<mdash> массив, сравнение будет
+выполнять grep или рекурсивное умное сопоставление Если правый операнд
+E<mdash> хеш, сравнение будет проверять существование одного или более ключей.
+Большая и устрашающая диаграмма в C<perldoc perlsyn> даёт гораздо больше деталей
+обо всех сравнениях, которые может выполнять оператор умного сопоставления.
+
+Серьёзное предложение для 5.16 предполагает существенное упрощение умного
+сопоставления. Чем более сложны ваши операнды, тем больше у вас шансов получить
+сбивающий с толку результат. Избегайте сравнения объектов и придерживайтесь
+простых операций между двумя скалярами или одним скаляром и одной агрегатной
+переменной для достижения наилучших результатов.
+
+С учётом вышесказанного, умное сопоставление может быть полезным:
+
+=begin programlisting
+
+    my ($x, $y) = (10, 20);
+    say 'Not equal numerically' unless $x ~~ $y;
+
+    my $z = '10 little endians';
+    say 'Equal numeric-ishally' if $x ~~ $z;
+
+    # сопоставление регулярному выражению
+    my $needle = qr/needle/;
+
+    say 'Pattern match' if 'needle' ~~ $needle;
+
+    say 'Grep through array' if @haystack ~~ $needle;
+
+    say 'Grep through hash keys' if %hayhash ~~ $needle;
+
+    say 'Grep through array' if $needle ~~ @haystack;
+
+    say 'Array elements exist as hash keys'
+        if %hayhash    ~~ @haystack;
+
+    say 'Smart match elements' if @straw ~~ @haystack;
+
+    say 'Grep through hash keys' if $needle ~~ %hayhash;
+
+    say 'Array elements exist as hash keys'
+        if @haystack  ~~ %hayhash;
+
+    say 'Hash keys identical' if %hayhash ~~ %haymap;
+
+=end programlisting
+
+Умный поиск соответствия работает даже если один из операндов E<mdash> I<ссылка>
+на заданный тип данных:
+
+=begin programlisting
+
+    say 'Hash keys identical' if %hayhash ~~ \%hayhash;
+
+=end programlisting

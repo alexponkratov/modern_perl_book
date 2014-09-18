@@ -1,6 +1,4 @@
-=encoding utf-8
-
-=head1 Умное сопоставление
+=head1 Smart Matching
 
 Z<smart_match>
 
@@ -10,15 +8,21 @@ X<C<~~>; smart match operator>
 X<operators; C<~~>>
 X<builtins; C<given>>
 
-Оператор умного сопоставления, C<~~>, сравнивает два операнда и возвращает
-истинное значение, если они успешно сопоставлены. Расплывчатость определения
-демонстрирует умность оператора: тип сравнения зависит от типов обоих операндов.
-C<given> (L<given_when>) выполняет неявное умное сопоставление.
+The smart match operator, C<~~>, compares two operands and returns a true value
+if they match. The type of comparison depends on the type of both operands.
+C<given> (L<switch_statements>) performs an implicit smart match.
+
+As of Perl 5.18, this feature is experimental. The details of the current
+design are complex and unwieldy, and no proposal for simplifying things has
+gained enough popular support to warrant a complete overhaul. The more complex
+your operands, the more likely you are to receive confusing results. Avoid
+comparing objects and stick to simple operations between two scalars or one
+scalar and one aggregate for the best results.
 
 X<operators; C<~~>>
 X<C<~~>; smart match operator>
 
-Оператор умного сопоставления E<mdash> инфиксный оператор:
+The smart match operator is an infix operator:
 
 =begin programlisting
 
@@ -26,23 +30,17 @@ X<C<~~>; smart match operator>
 
 =end programlisting
 
-Тип сравнения обычно зависит в первую очередь от типа правого операнда, а затем
-E<mdash> от левого. Например, если правый операнд E<mdash> скаляр с числовой
-составляющей, сравнение будет использовать числовое равенство. Если правый
-операнд E<mdash> регулярное выражение, сравнение будет использовать grep или
-сопоставление шаблону. Если правый операнд E<mdash> массив, сравнение будет
-выполнять grep или рекурсивное умное сопоставление Если правый операнд
-E<mdash> хеш, сравнение будет проверять существование одного или более ключей.
-Большая и устрашающая диаграмма в C<perldoc perlsyn> даёт гораздо больше деталей
-обо всех сравнениях, которые может выполнять оператор умного сопоставления.
+The type of comparison I<generally> depends first on the type of the right
+operand and then on the left operand. For example, if the right operand is a
+scalar with a numeric component, the comparison will use numeric equality. If
+the right operand is a regex, the comparison will use a grep or a pattern
+match.  If the right operand is an array, the comparison will perform a grep or
+a recursive smart match. If the right operand is a hash, the comparison will
+check the existence of one or more keys. A large and intimidating chart in
+C<perldoc perlsyn> gives far more details about all the comparisons smart match
+can perform.
 
-Серьёзное предложение для 5.16 предполагает существенное упрощение умного
-сопоставления. Чем более сложны ваши операнды, тем больше у вас шансов получить
-сбивающий с толку результат. Избегайте сравнения объектов и придерживайтесь
-простых операций между двумя скалярами или одним скаляром и одной агрегатной
-переменной для достижения наилучших результатов.
-
-С учётом вышесказанного, умное сопоставление может быть полезным:
+These examples are deliberately simple, because smart match can be confusing:
 
 =begin programlisting
 
@@ -52,7 +50,6 @@ E<mdash> хеш, сравнение будет проверять существ
     my $z = '10 little endians';
     say 'Equal numeric-ishally' if $x ~~ $z;
 
-    # сопоставление регулярному выражению
     my $needle = qr/needle/;
 
     say 'Pattern match' if 'needle' ~~ $needle;
@@ -77,11 +74,14 @@ E<mdash> хеш, сравнение будет проверять существ
 
 =end programlisting
 
-Умный поиск соответствия работает даже если один из операндов E<mdash> I<ссылка>
-на заданный тип данных:
+Smart match works even if one operand is a I<reference> to the given data type:
 
 =begin programlisting
 
     say 'Hash keys identical' if %hayhash ~~ \%hayhash;
 
 =end programlisting
+
+It's difficult to recommend the use of smart match except in the simplest
+circumstances, but it can be useful when you have a literal string or number to
+match against a variable, as in the case of smart match.

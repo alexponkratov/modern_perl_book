@@ -1,69 +1,62 @@
-=encoding utf-8
-
-=head1 Контекст
+=head1 Context
 
 Z<context_philosophy>
 
 X<context>
 
-В разговорных языка значение слова или фразы может зависеть от того, как вы их
-используете; локальный I<контекст> помогает прояснить намерение. Например,
-несоответствующее употребление множественного числа во фразе E<laquo>Please give
-me one hamburgers!E<raquo>N<множественное число существительного не
-соответствует количеству.> звучит неправильно, так же как неправильный пол в
-E<laquo>la gatoE<raquo>N<Артикль женского рода, тогда как существительное
-E<mdash> мужского.> заставляет носителей языка посмеиваться. Примите также во
-внимание местоимение E<laquo>youE<raquo> или существительное
-E<laquo>sheepE<raquo>, которое может единственным или множественным числом в
-зависимости от контекста.
+In spoken languages, the meaning of a word or phrase may depend on how you use
+it; the local I<context> helps clarify the intent. For example, the
+inappropriate pluralization of "Please give me one hamburgers!"N<The
+pluralization of the noun differs from the amount.> sounds wrong, just as the
+incorrect gender of "la gato"N<The article is feminine, but the noun is
+masculine.> makes native speakers chuckle. Other words do double duty; one
+sheep is a sheep just as two sheep are also sheep.
 
-Контекст в Perl сходен. Он определяет как количесто, так и вид используемых
-данных. Perl охотно попытается предоставить именно то, чего вы просите E<mdash>
-при условии, если вы это делаете, выбирая соответствующий контекст.
+Context in Perl is similar. It describes the I<amount> as well as the I<kind>
+of data to use. Perl will do what you mean to do to data if you choose the
+appropriate context for that data.
 
-Некоторые операции в Perl ведут себя по-разному в случаях, когда вы хотите получить ноль,
-один или несколько результатов. Конкретная конструкция в Perl в случае, если
-вы напишете E<laquo>Сделай это, но результаты меня не волнуютE<raquo>, может
-делать нечто совершенно другое по сравнению с E<laquo>Сделай это, и я ожидаю
-получить несколько результатовE<raquo>. Другие операции позволяют вам
-определённо указать, предполагаете ли вы работать с числовыми данными,
-текстовыми данными, или данными, содержащими E<laquo>истинуE<raquo> или
-E<laquo>ложьE<raquo>.
+For example, several Perl operations produce different behaviors when you
+expect zero, one, or many results. A specific construct in Perl may do
+something different if you write "Do this, but I don't care about any results"
+compared to "Do this and give me multiple results." Other operations allow you
+to specify whether you expect to work with numeric data, textual data, or true
+or false data.
 
-Контекст может быть коварным если вы пытаетесь писать или читать код на Perl
-как серию единичных выражений в отрыве от их окружения. Вы можете обнаружить
-себя хлопающим по лбу после долгой сессии отладки, когда выясните, что ваши
-предположения относительно контекста были неверны. Если же напротив вы осознаёте
-контекст, ваш код будет более правильным E<mdash> а также более чистым, гибким и
-лаконичным.
+Context can be tricky if you try to write or read Perl code as a series of
+single steps in isolation. That's not how Perl works! Every expression is part
+of a larger context. You may find yourself slapping your forehead after a long
+debugging session when you discover that your assumptions about context were
+incorrect. If instead you're aware of context, your code will be more
+correct--and cleaner, flexible, and more concise.
 
-=head2 Пустой, скалярный и списочный контекст
+=head2 Void, Scalar, and List Context
 
 Z<amount_context>
 
 X<context; amount>
 X<amount context>
 
-I<Контекст количества> определяет, I<сколько> элементов вы ожидаете получить
-от операции. Близкая параллель E<mdash> согласование числа между субъектом и
-глаголом в английском языке. Даже не зная формального определения этого
-лингвистического принципа, вы, вероятно, поймёте ошибку в предложении
-E<laquo>Perl are a fun languageE<raquo>. В Perl количество элементов, которое вы
-запросите, определяет, сколько вы получите.
+I<Amount context> governs I<how many> items you expect from an
+operation. The English language's subject-verb number agreement is a close
+parallel. Even without knowing the formal description of this linguistic
+principle, you probably understand the error in the sentence "Perl are a fun
+language"N<In terms of amount context, you could say that the verb "are"
+expects multiple nouns.>. In Perl, the number of items you request determines
+how many you get.
 
 X<void context>
 X<context; void>
 
-Предположим, у вас есть функция (L<functions>) под названием C<find_chores()>,
-которая сортирует ваш список домашних дел по приоритету задач. Способ, которым
-вы вызовете эту функцию, определяет, что она будет делать. У вас можете не быть
-времени что либо делать, в этом случае вызов функции E<mdash> это просто попытка
-выглядеть работящим. У вас может быть достаточно времени для выполнения одной
-задачи, или, может быть, у вас взрыв энергии в свободный выходной, и вы хотите
-выполнить как можно больше.
+Suppose the function (L<functions>) called C<find_chores()> sorts your
+household todo list in order of task priority. The number of chores you expect
+to read from your list determines what exactly the function will do. If you
+expect nothing, you're just pretending to be busy. If you expect one task, you
+have something to do for the next fifteen minutes. If you have a burst of
+energy on a free weekend, you could get all of the chores.
 
-Если вы просто вызовете функция и никак не используете возвращаемое ей значение,
-вы вызвали функцию в I<пустом контексте>:
+When you call a function on its own and never use its return value, you've used
+I<void context>:
 
 =begin programlisting
 
@@ -74,8 +67,8 @@ X<context; void>
 X<context; scalar>
 X<scalar context>
 
-Присвоение возвращаемого функцией значения единственному элементу (L<scalars>)
-вычисляет функцию в I<скалярном контексте>:
+Assigning the function's return value to a single item (L<scalars>) enforces
+I<scalar context>:
 
 =begin programlisting
 
@@ -86,20 +79,23 @@ X<scalar context>
 X<list context>
 X<context; list>
 
-Присвоение результатов вызова функции массиву (L<arrays>) или списку, или
-использование её в списке, вычисляет функцию в I<списочном контексте>:
+Assigning the results of calling the function to an array (L<arrays>) or a
+list, or using it in a list, evaluates the function in I<list context>:
 
 =begin programlisting
 
     my @all_results             = find_chores();
     my ($single_element, @rest) = find_chores();
+
+    # list of results passed to a function
     process_list_of_results( find_chores() );
 
 =end programlisting
 
-Скобки во второй строке предыдущего примера группируют объявление двух
-переменных (L<lexical_scope>), чтобы присвоение вело себя так, как вы
-ожидаете. Если переменная C<@rest> не используется, вы можете написать и так:
+The parentheses in the second line of the previous example group the two
+variable declarations (L<lexical_scope>) into a single unit so that assignment
+assigns to both of the variables. Note that a single-item list is still a list,
+however. You could also correctly write:
 
 =begin programlisting
 
@@ -107,10 +103,10 @@ X<context; list>
 
 =end programlisting
 
-E<hellip>в этом случае скобки поясняют парсеру Perl 5, что вы подразумеваете
-списочный контекст для присваивания, несмотря на то, что присваиваете только
-одному элементу списка. Это неочевидно, но теперь, когда вы знаете об этом,
-различие контекста количества между этими двумя выражениями должно быть ясно:
+.... in which case the parentheses give a hint to the Perl parser that you
+intend list context for the assignment even though you assign only one element
+of a list. This is subtle, but now that you know about it, the difference of
+amount context between these two statements should be obvious:
 
 =begin programlisting
 
@@ -119,10 +115,9 @@ E<hellip>в этом случае скобки поясняют парсеру P
 
 =end programlisting
 
-Вычисление функции или выражения E<mdash> исключая присваивание E<mdash> в
-списочном контексте может вызвать путаницу. Списки распространяют списочный
-контекст на выражения, которые они содержат. Оба этих вызова C<find_chores()>
-происходят в списочном контексте:
+Evaluating a function or expression--except for assignment--in list context can
+produce confusion. Lists propagate list context to the expressions they
+contain. Both of these calls to C<find_chores()> occur in list context:
 
 =begin programlisting
 
@@ -131,16 +126,16 @@ E<hellip>в этом случае скобки поясняют парсеру P
     my %results =
     (
         cheap_operation     => $cheap_results,
-        expensive_operation => find_chores(), # УПС!
+        expensive_operation => find_chores(), # OOPS!
     );
 
 =end programlisting
 
 X<builtins; C<scalar>>
 
-Последний пример часто удивляет начинающих программистов, так как инициализация
-хеша (L<hashes>) списком значений налагает списочный контекст на C<find_chores>.
-Используйте оператор C<scalar> для наложения скалярного контекста:
+The latter example often surprises novice programmers, as initializing a hash
+(L<hashes>) with a list of values imposes list context on C<find_chores>. Use
+the C<scalar> operator to impose scalar context:
 
 =begin programlisting
 
@@ -152,32 +147,30 @@ X<builtins; C<scalar>>
 
 =end programlisting
 
-Почему контекст важен? Зависящая от контекста функция может проверить контекст,
-в котором она вызывается, и определить, как много работы она должна сделать. В
-пустом контексте функция C<find_chores()> может законно ничего не делать. В
-скалярном контексте она может найти только самую важную задачу. В списочном
-контексте она должна отсортировать и вернуть весь список.
+Why does context matter? A context-aware function can examine its calling
+context and decide how much work it must do. In void context, C<find_chores()>
+may legitimately do nothing. In scalar context, it can find only the most
+important task. In list context, it must sort and return the entire list.
 
-=head2 Числовой, строковый и булев контекст
+=head2 Numeric, String, and Boolean Context
 
 Z<value_contexts>
 
 X<value context>
 X<context; value>
 
-Другой вид контекста в Perl E<mdash> I<контекст значения> E<mdash> определяет, как Perl
-интерпретирует кусок данных. Вы, вероятно, уже заметили, что Perl проявляет гибкость
-в определении того, имеете вы число или строку, и преобразовании их в тот вид,
-в который вы хотите. В обмен на отсутствие обязательств объявлять (или хотя бы
-следить) какой именно I<тип> данных содержит переменная или выдаёт функция,
-контекст типа в Perl предоставляет подсказки, которые говорят компилятору, как
-обращаться с данными.
+Perl's other context--I<value context>--governs how Perl interprets a piece of
+data. You've probably already noticed that Perl can figure out if you have a
+number or a string and convert data between the two forms. In exchange for not
+having to declare (or at least track) explicitly what I<type> of data a
+variable contains or a function produces, Perl's value contexts provide hints
+about how to treat that data.
 
 X<builtins; C<eq>>
 
-Perl приводит значения в конкретный надлежащий тип (L<coercion>), в
-зависимости от используемого вами оператора. Например, оператор C<eq>
-проверяет, что строки содержат одну и ту же информацию I<как строки>:
+Perl will coerce values to specific proper types (L<coercion>), depending on
+the operators you use. For example, the C<eq> operator tests that strings
+contain the same information I<as strings>:
 
 =begin programlisting
 
@@ -185,8 +178,8 @@ Perl приводит значения в конкретный надлежащ�
 
 =end programlisting
 
-Возможно, у вас был ставящий в тупик опыт, когда вы I<знаете>, что строки
-различаются, но сравнение всё равно показывает, что они одинаковые:
+You may have had a baffling experience where you I<know> that the strings are
+different, but they still compare the same:
 
 =begin programlisting
 
@@ -202,35 +195,33 @@ X<context; numeric>
 
 X<builtins; C<==>>
 
-Оператор C<eq> обращается со своими операндами как со строками, принудительно
-налагая на них I<строковый контекст>. Оператор C<==> налагает I<числовой
-контекст>. В числовом контексте обе строки возвращают C<0>
-(L<numeric_coercion>). Убедитесь, что используете соответствующий оператор для
-того типа контекста, который вам требуется.
+Where the C<eq> operator treats its operands as strings by enforcing I<string
+context> on them, the C<==> operator imposes I<numeric context>. In numeric
+context, both strings evaluate to C<0> (L<numeric_coercion>). Be sure to use
+the proper operator for the type of context you want.
 
 X<boolean context>
 X<context; boolean>
 
-I<Булев контекст> имеет место, когды вы используете значение в условном
-выражении. В предыдущем примере C<if> вычисляет результат операторов C<eq> и
-C<==> в булевом контексте.
+I<Boolean context> occurs when you use a value in a conditional statement. In
+the previous examples, C<if> evaluated the results of the C<eq> and C<==>
+operators in boolean context.
 
 X<context; explicit>
 
-В редких случаях вам, возможно, понадобится принудительно задать определённый контекст в случае, когда
-не существует оператора подходящего типа. Чтобы принудительно задать числовой
-контекст, прибавьте к переменной ноль. Чтобы принудительно задать строковый
-контекст, конкатенируйте переменную с пустой строкой. Чтобы принудительно задать
-булев контекст, используйте удвоенный оператор отрицания:
+In rare circumstances, you may need to force an explicit context where no
+appropriately typed operator exists. To force a numeric context, add zero to a
+variable. To force a string context, concatenate a variable with the empty
+string. To force a boolean context, double up the negation operator:
 
 =begin programlisting
 
-    my $numeric_x =  0 + $x;  # принудительно задаёт числовой  контекст
-    my $stringy_x = '' . $x;  # принудительно задаёт строковый контекст
-    my $boolean_x =    !!$x;  # принудительно задаёт булев     контекст
+    my $numeric_x =  0 + $x;  # forces numeric context
+    my $stringy_x = '' . $x;  # forces string  context
+    my $boolean_x =    !!$x;  # forces boolean context
 
 =end programlisting
 
-Контекст типа проще распознать, чем контекст количества. Как только вы узнаете,
-какой оператор предоставляет какой контекст (L<operator_types>), вы редко будете
-ошибаться.
+Value contexts are easier to identify than amount contexts. Once you know which
+operators provide which contexts (L<operator_types>), you'll rarely make
+mistakes.

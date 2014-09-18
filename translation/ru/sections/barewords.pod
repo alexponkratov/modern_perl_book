@@ -1,87 +1,87 @@
-=encoding utf-8
-
-=head1 Голые слова
+=head1 Barewords
 
 Z<barewords>
 
-Perl E<mdash> податливый язык. Вы можете писать программы в предпочитаемой вами
-наиболее творческой, поддерживаемой, запутанной или эксцентричной манере.
-Хорошие программисты заботятся о поддерживаемости, но Perl не пытается
-диктовать, что I<вы> считаете поддерживаемым.
+Perl is a malleable language. You can write programs in whichever creative,
+maintainable, obfuscated, or bizarre fashion you prefer. Good programmers write
+code that they want to maintain, but Perl won't decide for you what I<you>
+consider maintainable.
 
 X<barewords>
 X<C<strict> pragma>
 X<pragmas; C<strict>>
 
-Парсер Perl понимает встроенные функции и операторы Perl. Он использует сигилы
-для идентификации переменных и другую пунктуацию для распознавания вызовов
-функций и методов. Однако, иногда парсеру приходится догадываться, что вы имеете
-ввиду, особенно когда вы используете I<голое слово> E<mdash> идентификатор без
-сигила или другой синтаксически значимой пунктуации.
+Perl's parser understands Perl's builtins and operators. It uses sigils to
+identify variables and other punctuation to recognize function and method
+calls. Yet sometimes the parser has to guess what you mean, especially when you
+use a I<bareword>--an identifier without a sigil or other syntactically
+significant punctuation.
 
-=head2 Хорошее использование голых слов
+=head2 Good Uses of Barewords
 
 X<barewords; pros>
 
-Хотя прагма C<strict> (L<pragmas>) справедливо запрещает неоднозначные голые
-слова, некоторые голые слова приемлемы.
+Though the C<strict> pragma (L<pragmas>) rightly forbids ambiguous barewords,
+some barewords are acceptable.
 
-=head3 Голые слова как ключи хеша
+=head3 Bareword hash keys
 
 X<hashes; bareword keys>
 X<C<+>; unary operator>
 
-Ключи хеша в Perl 5 обычно I<не> допускают неоднозначности, потому что парсер
-может идентифицировать их как строковые ключи; C<pinball> в C<$games{pinball}>
-E<mdash> это очевидно строка.
+Hash keys in Perl are usually I<not> ambiguous because the parser can identify
+them as string keys; C<pinball> in C<$games{pinball}> is obviously a string.
 
-Иногда эта интерпретация E<mdash> не то, чего вы хотите, особенно если вы
-намеревались I<вычислить> встроенную или пользовательскую функцию, чтобы сгенерировать
-ключ хеша. В этом случае, устраните неоднозначность, указав аргументы, используя
-круглые скобки для аргументов функции, или предварите унарным плюсом, чтобы
-форсировать вычисление встроенной функции:
+Occasionally this interpretation is not what you want, especially when you
+intend to I<evaluate> a builtin or a function to produce the hash key. To make
+these cases clear, pass arguments to the function or use parentheses, or
+prepend a unary plus to force the evaluation of the builtin:
 
 =begin programlisting
 
-    # ключом будет литеральный E<laquo>shiftE<raquo>
+    # the literal 'shift' is the key
     my $value = $items{B<shift>};
 
-    # ключом будет значение, возвращённое E<laquo>shiftE<raquo>
+    # the value produced by shift is the key
     my $value = $items{B<shift @_>}
 
-    # унарный плюс приводит к использованию встроенной функции E<laquo>shiftE<raquo>
+    # the function returns the key
+    my $value = $items{B<myshift( @_ )>}
+
+    # unary plus uses the builtin shift
     my $value = $items{B<+>shift};
 
 =end programlisting
 
-=head3 Голые слова как имена пакетов
+=head3 Bareword package names
 
 X<packages; bareword names>
 
-Имена пакетов в Perl 5 тоже являютя голыми словами. Если вы следуете соглашениям
-об именовании, согласно которым имена пакетов начинаются с заглавных букв, а
-функций E<mdash> нет, маловероятно, что вы встретитесь с коллизиями имён, но
-парсер Perl 5 должен определить, как парсить C<< Package->method() >>. Значит
-ли это E<laquo>вызвать функцию с именем C<Package()> и вызвать метод C<method()>
-на возвращаемом ей значенииE<raquo> или E<laquo>вызвать метод с именем
-C<method()> в пространстве имён C<Package>E<raquo>? Ответ различается в
-зависимости от того, какой код парсер уже встретил в текущем пространстве имён.
+Package names are also barewords. If your naming conventions rule that package
+names have initial capitals and functions do not, you'll rarely encounter
+naming collisions. Even still, Perl must determine how to parse C<<
+Package->method >>. Does it mean "call a function named C<Package()> and call
+C<method()> on its return value?" or "Call a method named C<method()> in the
+C<Package> namespace?" The answer depends on the code you've already compiled.
 
-Принудите парсер воспринимать C<Package> как имя пакета, добавив разделитель
-пакетов (C<::>)N<Даже среди тех, кто понимает, почему это работает, очень
-немногие это делают.>:
+Force the parser to treat C<Package> as a package name by appending the package
+separator (C<::>)N<Even among people who understand why this works, very few
+people do it.> or make it a literal string:
 
 =begin programlisting
 
-    # вероятно метод класса
-    Package->method();
+    # probably a class method
+    Package->method;
 
-    # определённо метод класса
-    Package::->method();
+    # definitely a class method
+    PackageB<::>->method;
+
+    # a slightly less ugly class method
+    B<'>PackageB<'>->method;
 
 =end programlisting
 
-=head3 Голые слова как имена блоков кода
+=head3 Bareword named code blocks
 
 X<C<BEGIN>>
 X<C<DESTROY>>
@@ -91,10 +91,9 @@ X<C<UNITCHECK>>
 X<C<CHECK>>
 X<C<END>>
 
-Специальные именованные блоки кода C<AUTOLOAD>, C<BEGIN>, C<CHECK>, C<DESTROY>,
-C<END>, C<INIT> и C<UNITCHECK> E<mdash> это голые слова, которые I<объявляют>
-функции без использования встроенной директивы C<sub>. Вы уже видели это раньше
-(L<code_generation>):
+The special named code blocks C<AUTOLOAD>, C<BEGIN>, C<CHECK>, C<DESTROY>,
+C<END>, C<INIT>, and C<UNITCHECK> are barewords which I<declare> functions
+without the C<sub> builtin. You've seen this before (L<code_generation>):
 
 =begin programlisting
 
@@ -106,19 +105,17 @@ C<END>, C<INIT> и C<UNITCHECK> E<mdash> это голые слова, кото�
 
 =end programlisting
 
-Хотя вы I<можете> опустить C<sub> из объявления C<AUTOLOAD()>, немногие так
-делают.
+While you I<can> declare C<AUTOLOAD()> without using C<sub>, few people do.
 
-=head3 Голые слова как константы
+=head3 Bareword constants
 
 X<constants; barewords>
 
-Константы, объявленные с помощью прагмы C<constant>, можно использовать как
-голые слова:
+Constants declared with the C<constant> pragma are usable as barewords:
 
 =begin programlisting
 
-    # не используйте это для реальной аутентификации
+    # don't use this for real authentication
     use constant NAME     => 'Bucky';
     use constant PASSWORD => '|38fish!head74|';
 
@@ -126,44 +123,32 @@ X<constants; barewords>
 
 =end programlisting
 
-Обратите внимание, что эти константы I<не> интерполируются в строках,
-заключённых в двойные кавычки.
+These constants do I<not> interpolate in double-quoted strings.
 
 X<prototypes; barewords>
 
-Константы E<mdash> специальный случай прототипированных функций (L<prototypes>).
-Когда вы предварительно объявляете функцию с прототипом, парсер знает, как
-воспринимать эту функцию, и будет предупреждать об ошибках неоднозначности
-парсинга. Все остальные недостатки прототипов всё ещё имеют место.
+Constants are a special case of prototyped functions (L<prototypes>). When you
+predeclare a function with a prototype, the parser will treat all subsequent
+uses of that bareword specially--and will warn about ambiguous parsing errors.
+All other drawbacks of prototypes still apply.
 
-=head2 Неблагоразумное использование голых слов
+=head2 Ill-Advised Uses of Barewords
 
 X<barewords; cons>
 
-Независимо от того, насколько внимательно вы пишете код, голые слова всё равно
-приводят к неоднозначностям. Вы можете избежать большинства их использований,
-но вам встретится несколько типов голых слов в унаследованном коде.
+No matter how cautiously you code, barewords still produce ambiguous code. You
+can avoid the worst abuses, but you will encounter several types of barewords
+in legacy code.
 
-=head3 Голые вызовы функций
-
-X<barewords; function calls>
-X<C<B::Deparse>>
-
-Код, написанный без C<strict 'subs'>, может использовать голые имена функций.
-Добавление скобок заставляет код пройти эти ограничения. Используйте
-C<perl -MO=Deparse,-p> (см. C<perldoc B::Deparse>) чтобы понять, как Perl парсит
-их, затем расставляйте скобки соответствующим образом.
-
-=head3 Голые значения хешей
+=head3 Bareword hash values
 
 X<barewords; hash values>
 
-Некоторый старый код может не заботиться о том, чтобы заключить в кавычки
-I<значения> хеш-пар:
+Some old code may not take pains to quote the I<values> of hash pairs:
 
 =begin programlisting
 
-    # плохой стиль; не использовать
+    # poor style; do not use
     my %parents =
     (
         mother => Annette,
@@ -172,57 +157,65 @@ I<значения> хеш-пар:
 
 =end programlisting
 
-Если не существует ни функции C<Floyd()>, ни C<Annette()>, Perl будет
-интерпретировать эти голые слова как строки. C<strict 'subs'> выдаст ошибку в
-этой ситуации.
+When neither the C<Floyd()> nor C<Annette()> functions exist, Perl will
+interpret these barewords as strings. C<strict 'subs'> will produce an error in
+this situation.
 
-=head3 Голые дескрипторы файлов
+=head3 Bareword function calls
+
+X<barewords; function calls>
+X<C<B::Deparse>>
+
+Code written without C<strict 'subs'> may use bareword function names. Adding
+parentheses will make the code pass strictures. Use C<perl -MO=Deparse,-p> (see
+C<perldoc B::Deparse>) to discover how Perl parses them, then parenthesize
+accordingly.
+
+=head3 Bareword filehandles
 
 X<barewords; filehandles>
 
-До появления лексических дескрипторов файлов (L<lexical_filehandles>), все
-дескрипторы файлов и директорий использовали голые слова. Вы почти всегда можете
-безопасно переписать этот код на использование лексических дескрипторов файлов;
-исключения E<mdash> C<STDIN>, C<STDOUT> и C<STDERR>. К счастью, парсер Perl
-распознаёт их.
+Prior to lexical filehandles (L<lexical_filehandles>), all file and directory
+handles used barewords. You can almost always safely rewrite this code to use
+lexical filehandles. Perl's parser recognizes the special exceptions of
+C<STDIN>, C<STDOUT>, and C<STDERR>.
 
-=head3 Голые функции sort
+=head3 Bareword sort functions
 
 X<barewords; sort functions>
 X<C<sort>>
 X<builtins; C<sort>>
 
-Наконец, встроенная фукнция C<sort> может принимать в качестве второго аргумента
-I<имя> функции, которую нужно использовать для сортировки. Хотя это редко бывает
-неоднозначным для парсера, это может смутить читающих I<людей>. Альтернатива в
-виде передачи ссылки на функцию в скаляре немного лучше:
+Finally, the second operand of the C<sort> builtin can be the I<name> of a
+function to use for sorting. While this is rarely ambiguous to the parser, it
+can confuse I<human> readers. The alternative of providing a function reference
+in a scalar is little better:
 
 =begin programlisting
 
-    # стиль с использованием голого слова
+    # bareword style
     my @sorted = sort compare_lengths @unsorted;
 
-    # ссылка на фукнцию в скаляре
+    # function reference in scalar
     my $comparison = \&compare_lengths;
     my @sorted     = sort $comparison @unsorted;
 
 =end programlisting
 
-Второй вариант избегает использования голого слова, но результат на одну строчку
-длиннее. К сожалению, парсер Perl 5 I<не> понимает однострочную версию
-вследствие специального парсинга C<sort>; вы не можете использовать произвольное
-выражение (такое как взятие ссылки на именованную функцию) там, где может пройти
-блок или скаляр.
+The second option avoids the use of a bareword, but the result is longer.
+Unfortunately, Perl's parser I<does not> understand the single-line version due
+to the special parsing of C<sort>; you cannot use an arbitrary expression (such
+as taking a reference to a named function) where a block or a scalar might
+otherwise go.
 
 =begin programlisting
 
-    # не работает
+    # does not work
     my @sorted = sort \&compare_lengths @unsorted;
 
 =end programlisting
 
-В обоих случаях то, как C<sort> вызывает функцию и передаёт аргументы, может
-быть запутывающим (см. C<perldoc -f sort> для подробностей). Где возможно,
-рассмотрите использование вместо этого блочной формы C<sort>. Если же вы должны
-использовать какую-либо из форм с функцией, рассмотрите добавление объясняющего
-комментария.
+In both cases, the way C<sort> invokes the function and provides arguments can
+be confusing (see C<perldoc -f sort> for the details). Where possible, consider
+using the block form of C<sort> instead. If you must use either function form,
+add a comment about what you're doing and why.

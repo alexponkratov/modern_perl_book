@@ -1,21 +1,17 @@
-=encoding utf-8
+=head0 Style and Efficacy
 
-=head0 Стиль и эффективность
+Quality matters. Programs have bugs. Programs need maintenance and expansion.
+Programs have multiple programmers.
 
-Качество имеет значение.
+To program well, we must find the balance between getting the job done now and
+making our lives easier in the future.  We must balance time, resources, and
+quality. The craft of programming demands that we do that to the best of our
+ability.
 
-В программах есть ошибки. Программы требуют поддержки и расширения. Над
-программами работает множество программистов.
-
-Хорошее программирование требует от нас находить баланс между выполнением работы
-и созданием условий для того, чтобы выполнять её успешно и в будущем. Мы можем
-менять друг на друга время, ресурсы и качество. То, насколько хорошо мы это
-делаем, определяет наш уровень как практичных профессионалов.
-
-Понимание Perl важно. Так же как и развитие чувства хорошего вкуса.
-Единственный способ этого добиться E<mdash> практиковаться в поддержке кода и в
-чтении и написании хорошего кода. На этом пути нет срезов, но есть направляющие
-ориентиры.
+To write Perl well, we must understand the language. We must also cultivate a
+sense of good taste for the language and the design of programs.  The only way
+to do so is to practice maintaining code and reading and writing great code.
+This path has no shortcuts, but it does have guideposts.
 
 L<style>
 

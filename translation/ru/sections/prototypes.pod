@@ -1,25 +1,23 @@
-=encoding utf-8
-
-=head1 Прототипы
+=head1 Prototypes
 
 Z<prototypes>
 
 X<prototypes>
 
-I<Прототип> E<mdash> это набор необязательных метаданных, присоединённых к
-функции, которые влияют на то, как парсер понимает её аргументы. Хотя внешне
-они могут выглядеть как сигнатуры функций в других языках, на самом деле они
-очень отличаются.
+A I<prototype> is a piece of metadata attached to a function or variable. A
+function prototype changes how Perl's parser understands it.
 
 X<builtins; C<push>>
 
-Прототипы позволяют пользователям определять свои собственные функции, ведущие
-себя как встроенные. Рассмотрим встроенную фукнцию C<push>, которая принимает
-массив и список. Хотя обычно Perl 5 разгладил бы массив и список в единый
-список, переданный в C<push>, парсер знает, что не нужно разглаживать массив, чтобы
-C<push> мог модифицировать его на месте.
+Prototypes allow users to define their own functions which behave like
+builtins. Consider the builtin C<push>, which takes an array and a list. While
+Perl would normally flatten the array and list into a single list passed to
+C<push>, the parser knows to treat the array as a I<container>, not to flatten
+its values. In effect, this is like passing a reference to an array and a list
+of values to C<push>. The parser's behavior allows C<push> to modify the values
+of the container.
 
-Прототипы функций являются частью объявления:
+Function prototypes attach to function declarations:
 
 =begin programlisting
 
@@ -29,16 +27,17 @@ C<push> мог модифицировать его на месте.
 
 =end programlisting
 
-Любой прототип, привязанный к предварительному объявлению, должен совпадать с
-прототипом, привязанным к объявлению функции. Perl выдаст предупреждение, если
-это не так. Как ни странно, вы можете опустить прототип в предварительном
-объявлении и включить его в полное объявление E<mdash> но делать так нет причин.
+Any prototype attached to a forward declaration must match the prototype
+attached to the function declaration. Perl will give a warning if this is not
+true. Strangely you may omit the prototype from a forward declaration and
+include it for the full declaration--but there's no reason to do so.
 
 X<builtins; C<prototype>>
 
-Встроенная функция C<prototype> принимает имя функции и возвращает строку,
-представляющую её прототип. Используйте форму C<CORE::>, чтобы увидеть прототип
-встроенной функции:
+The builtin C<prototype> takes the name of a function and returns a string
+representing its prototype.
+
+To see the prototype of a builtin, use the C<CORE::> form of the builtin's name as the operand to C<prototype>:
 
 =begin screen
 
@@ -51,20 +50,20 @@ X<builtins; C<prototype>>
 
 =end screen
 
-C<prototype> вернёт C<undef> для тех встроенных функций, которые вы не можете
-эмулировать:
+C<prototype> will return C<undef> for those builtins whose functions you cannot
+emulate:
 
 =begin screen
 
     B<say prototype 'CORE::system' // 'undef'>
-    # undef; невозможно эмулировать встроенную функцию C<system>
+    # undef; cannot emulate builtin C<system>
 
     B<say prototype 'CORE::prototype' // 'undef'>
-    # undef; встроенная функция C<prototype> не имеет прототипа
+    # undef; builtin C<prototype> has no prototype
 
 =end screen
 
-Помните C<push>?
+Remember C<push>?
 
 =begin screen
 
@@ -73,9 +72,10 @@ C<prototype> вернёт C<undef> для тех встроенных функц
 
 =end screen
 
-Символ C<@> представляет список. Обратный слеш принуждает к использованию
-I<ссылки> для соответствующего аргумента. Этот прототип обозначает, что C<push>
-принимает ссылку на массив и список значений. Вы можете написать C<mypush> так:
+The C<@> character represents a list. The backslash forces the use of a
+I<reference> to the corresponding argument. This prototype means that C<push>
+takes a reference to an array and a list of values. You might write C<mypush>
+as:
 
 =begin programlisting
 
@@ -87,18 +87,20 @@ I<ссылки> для соответствующего аргумента. Эт
 
 =end programlisting
 
-Другие символы прототипов включают C<$> для скалярного аргумента, C<%> для
-обозначения хеша (чаще всего используется как ссылка) и C<&> для указания на
-блок кода. См. C<perldoc perlsub> для полной документации.
+Other prototype characters include C<$> to force a scalar argument, C<%> to
+mark a hash (most often used as a reference), and C<&> to identify a code
+block. See C<perldoc perlsub> for more information.
 
-=head2 Проблемы с прототипами
+=head2 The Problem with Prototypes
 
-Прототипы изменяют то, как Perl парсит ваш код, и могут вызывать приведение типов
-аргументов. Они не документируют количество или типы аргументов, которые функция
-ожидает, как и не устанавливают соответствие аргументов именованным параметрам.
+Prototypes change how Perl parses your code and how Perl coerces arguments to
+your functions. While these prototypes may superficially resemble function
+signatures in other languages, they are very different. They do not document
+the number or types of arguments functions expect, nor do they map arguments to
+named parameters.
 
-Приведение типов при использовании прототипов работает неочевидным образом, как
-навязывание скалярного контекста входным аргументам:
+Prototype coercions work in subtle ways, such as enforcing scalar context on
+incoming arguments:
 
 =begin programlisting
 
@@ -115,36 +117,40 @@ I<ссылки> для соответствующего аргумента. Эт
 
 =end programlisting
 
-E<hellip>но работает только с простыми выражениями:
+... but only work on simple expressions:
 
 =begin programlisting
 
     sub mypush(\@@);
 
-    # ошибка компиляции: несоответствие прототипов
-    # (ожидался массив, получено скалярное присваивание)
+    # compilation error: prototype mismatch
+    # (expects array, gets scalar assignment)
     mypush( my $elems = [], 1 .. 20 );
 
 =end programlisting
 
-Чтобы отладить это, пользователи C<mypush> должны знать как то, что прототип
-существует, так и ограничения прототипов массивов. Хуже того, это I<простые>
-ошибки, которые могут вызывать прототипы.
+To debug this, users of C<mypush> must know both that a prototype exists, and
+the limitations of the array prototype.
 
-=head2 Хорошее использование прототипов
+=begin tip Debugging Prototype Errors
+
+If you think this error message is inscrutable, wait until you see the
+I<complicated> prototype errors.
+
+=end tip
+
+=head2 Good Uses of Prototypes
 
 X<builtins; overriding>
 X<pragmas; C<subs>>
 X<C<subs> pragma>
 
-Немногие использования прототипов достаточно интересны, чтобы перевесить их
-недостатки, но они существуют.
-
-Во-первых, они могут позволить вам переопределить встроенные функции. Сначала
-проверьте, что вы I<можете> переопределить встроенную функцию, проверив её
-прототип в маленькой тестовой программе. Затем используйте прагму C<subs>, чтобы
-сказать Perl, что вы собираетесь переопределить встроенную функцию, и, наконец,
-объявите ваше переопределение с корректным прототипом:
+Prototypes I<do> have a few good uses that outweigh their problems. For
+example, you can use a prototyped function to override one of Perl's builtins.
+First check that you I<can> override the builtin by examining its prototype in
+a small test program. Then use the C<subs> pragma to tell Perl that you plan to
+override a builtin, and finally declare your override with the correct
+prototype:
 
 =begin programlisting
 
@@ -154,16 +160,16 @@ X<C<subs> pragma>
 
 =end programlisting
 
-Имейте ввиду, что прагма C<subs> действует для всей оставшейся части I<файла>,
-независимо от лексической области видимости.
+Beware that the C<subs> pragma is in effect for the remainder of the I<file>,
+regardless of any lexical scoping.
 
 X<constants>
 
-Вторая причина использования прототипов E<mdash> это определение констант
-времени компиляции. Когда Perl встречает функцию, объявленную с пустым
-прототипом (в противоположность I<отсутствию> прототипа), I<и> эта функция
-возвращает единственное константное выражение, оптимизатор превратит все вызовы
-этой функции в константы вместо вызовов функции:
+The second reason to use prototypes is to define compile-time constants. When
+Perl encounters a function declared with an empty prototype (as opposed to
+I<no> prototype) I<and> this function evaluates to a single constant
+expression, the optimizer will turn all calls to that function into constants
+instead of function calls:
 
 =begin programlisting
 
@@ -171,52 +177,53 @@ X<constants>
 
 =end programlisting
 
-Весь последующий код будет использовать вычисленное значение Пи на месте
-голого слова C<PI> или вызова C<PI()>, с учётом области видимости.
+All subsequent code will use the calculated value of pi in place of the
+bareword C<PI> or a call to C<PI()>, with respect to scoping and visibility.
 
 X<C<constant> pragma>
 X<pragmas; C<constant>>
 X<CPAN; C<Const::Fast>>
 
-Базовая прагма C<constant> справляется с этими деталями за вас. Модуль
-C<Const::Fast> из CPAN создаёт константные скаляры, которые вы можете
-интерполировать в строки.
+The core pragma C<constant> handles these details for you. The C<Const::Fast>
+module from the CPAN creates constant scalars which you can interpolate into
+strings.
 
 X<CPAN; C<Test::Exception>>
 X<CPAN; C<Test::Fatal>>
 
-Разумное использование прототипов E<mdash> это расширение синтаксиса Perl 5 для
-оперирования анонимными функциями как блоками. CPAN-модуль C<Test::Exception>
-использует это во благо для предоставления приятного API с отложенными
-вычислениямиN<См. также C<Test::Fatal>>. Его функция C<throws_ok()> принимает
-три аргумента: блок кода для выполнения, регулярное выражение для сравнения со
-строкой исключения и необязательное описание теста:
+A reasonable use of prototypes is to extend Perl's syntax to operate on
+anonymous functions as blocks. The CPAN module C<Test::Exception> uses this to
+good effect to provide a nice API with delayed computationN<See also
+C<Test::Fatal>>. Its C<throws_ok()> function takes three arguments: a block of
+code to run, a regular expression to match against the string of the exception,
+and an optional description of the test:
 
 =begin programlisting
 
-    use Test::More tests => 1;
+    use Test::More;
     use Test::Exception;
 
     throws_ok
-        { my $unobject; $unobject->yoink() }
+        { my $unobject; $unobject->yoink }
         qr/Can't call method "yoink" on an undefined/,
         'Method on undefined invocant should fail';
 
+    done_testing();
+
 =end programlisting
 
-Экспортируемая функция C<throws_ok()> имеет протоип C<&$;$>. Его первый аргумент
-E<mdash> это блок, который становится анонимной функцией. Второй аргумент
-E<mdash> скаляр. Третий аргумент не обязателен.
+The exported C<throws_ok()> function has a prototype of C<&$;$>. Its first
+argument is a block, which becomes an anonymous function. The second argument
+is a scalar. The third argument is optional.
 
-Внимательные читатели, возможно, заметили отсутствие запятой после блока. Это
-причуда парсера Perl 5, который ожидает после прототипированного блока пробел,
-а не оператор запятой. Это недостаток синтаксиса прототипов.
-
-Вы можете использовать C<throws_ok()>, не пользуясь прототипами:
+Careful readers may have spotted the absence of a comma after the block.  This
+is a quirk of Perl's parser, which expects whitespace after a prototyped block,
+not the comma operator. This is a drawback of the prototype syntax. If that
+bothers you, use C<throws_ok()> without taking advantage of the prototype:
 
 =begin programlisting
 
-    use Test::More tests => 1;
+    use Test::More;
     use Test::Exception;
 
     throws_okB<(>
@@ -224,13 +231,14 @@ E<mdash> скаляр. Третий аргумент не обязателен.
         qr/Can't call method "yoink" on an undefined/,
         'Method on undefined invocant should fail' B<)>;
 
+    done_testing();
+
 =end programlisting
 
 X<builtins; C<sort>>
 
-Последнее хорошее применение прототипов E<mdash> при определении произвольной
-именованной функции для использования с C<sort>N<Бен Тилли (Ben Tilly)
-предложил этот пример.>:
+A final good use of prototypes is when defining a custom named function to use
+with C<sort>N<Ben Tilly suggested this example.>:
 
 =begin programlisting
 
@@ -244,7 +252,7 @@ X<builtins; C<sort>>
 
 =end programlisting
 
-Прототип C<$$> заставляет Perl передавать сортируемые пары в C<@_>. Документация
-C<sort> предполагает, что это немного медленнее, чем использование глобальных
-переменных пакета C<$a> и C<$b>, но использование лексических переменных
-зачастую оправдывает любое снижение скорости.
+The prototype of C<$$> forces Perl to pass the sort pairs in C<@_>. C<sort>'s
+documentation suggests that this is slightly slower than using the package
+globals C<$a> and C<$b>, but using lexical variables often makes up for any
+speed penalty.

@@ -1,13 +1,9 @@
-=encoding utf-8
-
-=head1 Состояния против замыканий
+=head1 State versus Closures
 
 Z<state>
 
-Замыкания (L<closures>) пользуются возможностями лексической области видимости
-(L<scope>) для предоставления опосредованного доступа к полу-приватным
-переменным. Даже именованные функции могут возпользоваться лексическими
-привязками:
+Closures (L<closures>) use lexical scope (L<scope>) to control access to
+lexical variables--even with named functions:
 
 =begin programlisting
 
@@ -26,14 +22,10 @@ Z<state>
 
 =end programlisting
 
-Инкапсуляция функций для обеспечения безопасности позволяет всем трём функциям
-разделять состояние, не открывая лексическую переменную прямому воздействию
-внешнего кода. Эта идиома хорошо работает для тех случаев, когда внешний код
-должен иметь возможность изменять внутреннее состояние, но слишком тяжеловесна,
-если только одной функции нужно управлять состоянием.
-
-Предположим, что каждый сотый покупатель вашего магазина мороженого получает
-бесплатную посыпку:
+All three functions encapsulate that shared state without exposing the lexical
+variable directly to external code. This idiom works well for cases where
+multiple functions access that lexical, but it's clunky when only one function
+does. Suppose every hundredth ice cream parlor customer gets free sprinkles:
 
 =begin programlisting
 
@@ -42,11 +34,9 @@ Z<state>
     sub serve_customer
     {
         $cust_count++;
-
         my $order = shift;
 
         add_sprinkles($order) if $cust_count % 100 == 0;
-
         ...
     }
 
@@ -55,10 +45,9 @@ Z<state>
 X<state>
 X<builtins; C<state>>
 
-Этот подход I<работает>, но создание новой лексической области видимости для
-единственной функции создаёт больше сопутствующей сложности, чем нужно.
-Встроенная директива C<state> позволяет вам объявлять переменные лексической
-области видимости со значением, сохраняющимся между вызовами:
+This approach I<works>, but creating a new outer lexical scope for a single
+function is a little bit noisy. The C<state> builtin allows you to declare a
+lexically scoped variable with a value that persists between invocations:
 
 =begin programlisting
 
@@ -79,11 +68,11 @@ X<builtins; C<state>>
 X<C<feature>>
 X<C<feature>; C<state>>
 
-Вы должны явно подключить эту возможность, используя модуль C<Modern::Perl>,
-прагму C<feature> (L<pragmas>) или требуя конкретную версию Perl 5.10 или выше
-(например, с помощью C<use 5.010;> или C<use 5.012;>).
+You must enable this feature explicitly by using a module such as
+C<Modern::Perl>, the C<feature> pragma (L<pragmas>), or requiring the features
+of at least Perl 5.10 (C<use 5.010;>, C<use 5.012;>, and so on).
 
-C<state> также работает внутри анонимных функций:
+C<state> also works within anonymous functions:
 
 =begin programlisting
 
@@ -98,32 +87,32 @@ C<state> также работает внутри анонимных функц�
 
 =end programlisting
 
-E<hellip>хотя у этого подхода немного очевидных преимуществ.
+... though there are few obvious benefits to this approach.
 
-=head1 Состояния против псевдосостояний
+=head1 State versus Pseudo-State
 
-Perl 5.10 не рекомендует использование техники из предыдущих версий Perl, с
-помощью который вы могли в сущности эмулировать C<state>. Именованная функция
-может замкнуться на своей предыдущей лексической области видимости с помощью
-злоупотребления нюансом реализации. Использование постфиксного условия,
-возвращающего ложь, с объявлением C<my> позволяет избежать I<повторной
-инициализации> лексической переменной значением C<undef> или её инициализирующим
-значением.
+In old versions of Perl, a named function could close over its previous lexical
+scope by abusing a quirk of implementation. Using a postfix conditional which
+evaluates to false with a C<my> declaration avoided I<reinitializing> a lexical
+variable to C<undef> or its initialized value.
 
-Любое использование постфиксного условного выражения, модифицирующего объявление
-лексической переменной, теперь вызывает предупреждение о нерекомендуемости. С
-использованием этой техники слишком легко написать непреднамеренно ошибочный
-код; вместо этого используйте C<state> там где доступно, или настоящие замыкания
-в ином случае. Перепишите эту идиому, если она вам попадётся:
+In modern versions of Perl, any use of a postfix conditional expression
+modifying a lexical variable declaration produces a deprecation warning. It's
+too easy to write inadvertently buggy code with this technique; use C<state>
+instead where available, or a true closure otherwise. Rewrite this idiom when
+you encounter it:
 
 =begin programlisting
 
     sub inadvertent_state
     {
-        # my $counter  = 1 if 0; # НЕ РЕКОМЕНДУЕТСЯ; не используйте
-        state $counter = 1;      # используйте вместо
+        # my $counter  = 1 if 0; # DEPRECATED; don't use
+        state $counter = 1;      # prefer
 
         ...
     }
 
 =end programlisting
+
+You may only initialize a state variable with a scalar value. If you need to
+keep track of an aggregate, use a hash or array reference (L<references>).

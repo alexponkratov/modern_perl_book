@@ -1,22 +1,21 @@
-=encoding utf-8
-
-=head1 Хеши
+=head1 Hashes
 
 Z<hashes>
 
 X<hashes>
 
-I<Хеш> E<mdash> структура данных первого класса в Perl, которая ассоциирует
-строковые ключи со скалярными значениями. Так же как имя переменной
-соотносится с местом хранения, так и ключ в хеше ссылается на значение.
-Воспринимайте хеш как телефонную книгу: используйте имена ваших друзей для
-поиска их номеров. В других языках хеши называются I<таблицами>,
-I<ассоциативными массивами>, I<словарями> или I<картами>.
+A I<hash> is a first-class Perl data structure which associates string keys
+with scalar values. Just as the name of a variable corresponds to something
+which holds a value, so does a hash key refer to something which contains a
+value. Think of a hash like a contact list: use the names of your friends to
+look up their phone numbers. Other languages call hashes I<tables>,
+I<associative arrays>, I<dictionaries>, or I<maps>.
 
-Хеши имеют два важных свойства: они хранят один скаляр на уникальный ключ, и
-они не имеют определённой сортировки ключей.
+Hashes have two important properties: they store one scalar per unique key and
+they provide no specific ordering of keys. Keep that latter property in mind.
+Though it has always been true in Perl, it's very, very true in Perl 5.18.
 
-=head2 Объявление хешей
+=head2 Declaring Hashes
 
 Z<declaring_hashes>
 
@@ -24,7 +23,7 @@ X<hashes; declaring>
 X<C<%>; sigil>
 X<sigils; C<%>>
 
-Хеши используют сигил C<%>. Объявляются хеши так:
+Hashes use the C<%> sigil. Declare a lexical hash with:
 
 =begin programlisting
 
@@ -32,29 +31,29 @@ X<sigils; C<%>>
 
 =end programlisting
 
-Хеши создаются пустыми. Вы можете написать C<my %favorite_flavors = ()>, но это
-излишне.
+A hash starts out empty. You could write C<my %favorite_flavors = ();>, but
+that's redundant.
 
 X<C<$>; sigil>
 X<sigils; C<$>>
 
-Хеши используют скалярный сигил C<$> для доступа к отдельным элементам и
-фигурные скобки C<{ }> для доступа по ключам:
+Hashes use the scalar sigil C<$> when accessing individual elements and curly
+braces C<{ }> for keyed access:
 
 =begin programlisting
 
     my %favorite_flavors;
-    $favorite_flavors{Gabi}    = 'Raspberry chocolate';
+    $favorite_flavors{Gabi}    = 'Dark chocolate raspberry';
     $favorite_flavors{Annette} = 'French vanilla';
 
 =end programlisting
 
-Присваивание хешу списка ключей и значений в одном выражении:
+Assign a list of keys and values to a hash in a single expression:
 
 =begin programlisting
 
     my %favorite_flavors = (
-        'Gabi',    'Raspberry chocolate',
+        'Gabi',    'Dark chocolate raspberry',
         'Annette', 'French vanilla',
     );
 
@@ -63,59 +62,56 @@ X<sigils; C<$>>
 X<<< C<< => >>; fat comma operator >>>
 X<<< operators; C<< => >> >>>
 
-Если вы присвоите нечётное количество элементов хешу, то получите
-предупреждение. Идиоматический Perl часто использует оператор I<толстая запятая>
-(C<< => >>) для установки соответствия значений ключам, так как это делает
-разбиение на пары более заметным визуально:
+Hashes store pairs of keys and values. Perl will warn you if you assign an odd
+number of elements to a hash. Idiomatic Perl often uses the I<fat comma>
+operator (C<< => >>) to associate values with keys, as it makes the pairing
+more visible:
 
 =begin programlisting
 
     my %favorite_flavors = (
-        Gabi    B<< => >> 'Mint chocolate chip',
+        Gabi    B<< => >> 'Dark chocolate raspberry',
         Annette B<< => >> 'French vanilla',
     );
 
 =end programlisting
 
-Оператор толстая запятая ведёт себя как обычная запятая, но кроме того он
-автоматически заключает в кавычки предшествующее голое слово (L<barewords>).
-Прагма C<strict> не будет предупреждать о таком голом слове E<mdash> и если у
-вас есть функция с таким же именем, как ключ хеша, толстая запятая I<не> будет
-вызывать функцию:
+The fat comma operator acts like the regular comma I<and> also automatically
+quotes the previous bareword (L<barewords>). The C<strict> pragma will not warn
+about such a bareword--and if you have a function with the same name as a hash
+key, the fat comma will I<not> call the function:
 
 =begin programlisting
 
     sub name { 'Leonardo' }
 
-    my %address =
-    (
-        name => '1123 Fib Place',
+    my %address = (
+        name => '1123 Fib Place'
     );
 
 =end programlisting
 
-Ключом хеша будет C<name>, а не C<Leonardo>. Чтобы вызвать функцию, сделайте её
-вызов явным:
+The key of this hash will be C<name> and not C<Leonardo>. To call the function,
+make the function call explicit:
 
 =begin programlisting
 
-    my %address =
-    (
-        B<name()> => '1123 Fib Place',
+    my %address = (
+        B<name()> => '1123 Fib Place'
     );
 
 =end programlisting
 
 =begin notetip
 
-Присваивание хешу происходит в списочном контексте. Любая функция, вызванная в
-присваивании хешу, по умолчанию будет вызвана в списочном контексте, если нет
-явного преобразования с помощью C<scalar>.
+Hash assignment occurs in list context. Any function called in a hash
+assignment will default to list context without an explicit C<scalar()>
+coercion.
 
 =end notetip
 
-Для очистки хеша присвойте ему пустой списокN<Иногда вам может встретиться
-C<undef %hash>.>:
+Assign an empty list to empty a hashN<You may occasionally see C<undef
+%hash>, but that's a little ugly.>:
 
 =begin programlisting
 
@@ -123,51 +119,47 @@ C<undef %hash>.>:
 
 =end programlisting
 
-=head2 Индексация хеша
+=head2 Hash Indexing
 
 X<hashes; values>
 
-Доступ к отдельному значению хеша осуществляется с помощью операции индексации.
-Используйте ключ (I<доступ по ключу>) для получения значения из хеша:
+To access an individual hash value, use a key (a I<keyed access> operation):to
 
 =begin programlisting
 
-    my $address = $addresses{$name};
+    my $address = $addressesB<{$name}>;
 
 =end programlisting
 
-В этом примере C<$name> содержит строку, которая также является ключом хеша. Как
-и при доступе к отдельному элементу массива, сигил хеша изменился с C<%> на
-C<$> для обозначения доступа по ключу к скалярному значению.
+In this example, C<$name> contains a string which is also a key of the hash.
+As with accessing an individual element of an array, the hash's sigil has
+changed from C<%> to C<$> to indicate keyed access to a scalar value.
 
-Вы можете использовать строковые литералы как ключи хеша. Perl автоматически
-заключит голые слова в кавычки в соответствии с теми же правилами, что и толстые
-запятые:
+You may also use string literals as hash keys. Perl quotes barewords
+automatically according to the same rules as fat commas:
 
 =begin programlisting
 
-    # автоматическое заключение в кавычки
+    # auto-quoted
     my $address = $addresses{Victor};
 
-    # требует заключения в кавычки; не допустимое голое слово
+    # needs quoting; not a valid bareword
     my $address = $addresses{B<'>Sue-LinnB<'>};
 
-    # вызов функции требует устранения неоднозначности
+    # function call needs disambiguation
     my $address = $addresses{get_nameB<()>};
 
 =end programlisting
 
-=begin tip Не заключайте меня в кавычки
+=begin tip Don't Quote Me
 
-Новички зачастую всегда заключают в кавычки строковые литералы, являющиеся
-ключами хеша, но опытные разработчики опускают кавычки везде, где возможно. В
-этом смысле, наличие кавычек в ключах хеша указывает на намерение сделать что-то
-другое.
+Novices often always quote string literal hash keys, but experienced developers
+elide the quotes whenever possible. If you code this way, you can use the rare
+presence of quotes to indicate that you're doing something different.
 
 =end tip
 
-Даже на встроенные функции Perl 5 распространяется автоматическое заключение в
-кавычки:
+Even Perl builtins get the autoquoting treatment:
 
 =begin programlisting
 
@@ -184,28 +176,27 @@ C<$> для обозначения доступа по ключу к скаля�
 
 =end programlisting
 
-Унарный плюс (L<unary_coercions>) превращает то, на что как на голое слово
-(C<shift>) должны распространяться правила автоматического заключения в кавычки,
-в выражение. Как из этого следует, вы можете использовать произвольное выражение
-E<mdash> не только вызов функции E<mdash> как ключ хеша:
+The unary plus (L<unary_coercions>) turns what would be a bareword (C<shift>)
+subject to autoquoting rules into an expression. As this implies, you can use
+an arbitrary expression--not only a function call--as the key of a hash:
 
 =begin programlisting
 
-    # хотя не стоит этого I<делать> на самом деле
+    # don't actually I<do> this though
     my $address = $addresses{reverse 'odranoeL'};
 
-    # интерполяция допустима
+    # interpolation is fine
     my $address = $addresses{"$first_name $last_name"};
 
-    # как и вызовы методов
-    my $address = $addresses{ $user->name() };
+    # so are method calls
+    my $address = $addresses{ $user->name };
 
 =end programlisting
 
-Ключи хешей могут быть только строками. Всё, что вычисляется в строку, является
-допустимым ключом хеша. Perl пойдёт так далеко, что приведёт (L<coercion>)
-любую не-строку в строку, так что если вы используете объект как ключ хеша, вы
-получите строковую версию этого объекта вместо самого объекта:
+Hash keys can only be strings. Anything that evaluates to a string is an
+acceptable hash key. Perl will go so far as to coerce (L<coercion>) any
+non-string into a string. For example, if you use an object as a hash key,
+you'll get the stringified version of that object instead of the object itself:
 
 =begin programlisting
 
@@ -213,19 +204,19 @@ E<mdash> не только вызов функции E<mdash> как ключ х
     {
         my $book = Book->fetch_by_isbn( $isbn );
 
-        # вряд ли сделает именно то, чего вы хотите
+        # unlikely to do what you want
         $books{$book} = $book->price;
     }
 
 =end programlisting
 
-=head2 Существование ключа хеша
+=head2 Hash Key Existence
 
 X<builtins; C<exists>>
 X<hashes; C<exists>>
 
-Оператор C<exists> возвращает булево значение, указывающее, содержит ли хеш
-указанный ключ:
+The C<exists> operator returns a boolean value to indicate whether a hash
+contains the given key:
 
 =begin programlisting
 
@@ -242,10 +233,10 @@ X<hashes; C<exists>>
 
 =end programlisting
 
-Использование C<exists> вместо прямого доступа к ключу хеша позволяет избежать
-двух проблем. Во-первых, оно не проверяет булеву природу I<значения> хеша; ключ
-хеша может существовать и иметь значение, даже если это значение является ложью
-(включая C<undef>):
+Using C<exists> instead of accessing the hash key directly avoids two problems.
+First, it does not check the boolean nature of the hash I<value>; a hash key
+may exist with a value even if that value evaluates to a boolean false
+(including C<undef>):
 
 =begin programlisting
 
@@ -256,13 +247,12 @@ X<hashes; C<exists>>
 
 =end programlisting
 
-Во-вторых, C<exists> избегает автовивификации (L<autovivification>) во вложенных
-структурах данных (L<nested_data_structures>).
+Second, C<exists> avoids autovivification (L<autovivification>) within nested
+data structures (L<nested_data_structures>).
 
 X<builtins; C<defined>>
 
-Если ключ хеша существует, его значением может быть C<undef>. Проверьте это с
-помощью C<defined>:
+If a hash key exists, its value may be C<undef>. Check that with C<defined>:
 
 =begin programlisting
 
@@ -274,14 +264,15 @@ X<builtins; C<defined>>
 
 =end programlisting
 
-=head2 Доступ к ключам и значениям хеша
+=head2 Accessing Hash Keys and Values
 
 X<hashes; C<keys>>
 X<builtins; C<keys>>
 
-Хеши E<mdash> агрегатные переменные, но их парная природа даёт намного больше
-возможностей для итераций: по ключам хеша, по значениям хеша, или по парам
-ключей и значений. Оператор C<keys> возвращает список ключей хеша:
+Hashes are aggregate variables, but their pairwise nature is unique. Perl
+allows you to iterate over the keys of a hash, over the values of a hash, or
+over pairs of keys and values. The C<keys> operator produces a list of hash
+keys:
 
 =begin programlisting
 
@@ -295,7 +286,7 @@ X<builtins; C<keys>>
 X<hashes; C<values>>
 X<builtins; C<values>>
 
-Оператор C<values> возвращает список значений хеша:
+The C<values> operator produces a list of hash values:
 
 =begin programlisting
 
@@ -309,7 +300,8 @@ X<builtins; C<values>>
 X<hashes; C<each>>
 X<builtins; C<each>>
 
-Оператор C<each> возвращает список двухэлементных списков из ключа и значения:
+The C<each> operator produces a list of two-element lists of the key and the
+value:
 
 =begin programlisting
 
@@ -320,25 +312,30 @@ X<builtins; C<each>>
 
 =end programlisting
 
-В отличие от массивов, в этих списках нет очевидной сортировки. Сортировка
-зависит от внутренней реализации хеша, конкретной используемой вами версии Perl,
-размера хеша и элемента случайности. Несмотря на это, порядок элементов хеша
-согласован для C<keys>, C<values> и C<each>. Модификация хеша может изменять
-этот порядок, но вы можете на него полагаться, если хеш остаётся тем же самым.
+Unlike arrays, there is no obvious ordering to these lists. The ordering
+depends on the internal implementation of the hash, the particular version of
+Perl you are using, the size of the hash, and a random factor. Even so, the
+order of hash items is consistent between C<keys>, C<values>, and C<each>.
+Modifying the hash may change the order, but you can rely on that order if the
+hash remains the same. However, even if two hashes have the I<same> keys and
+values, you cannot rely on the iteration order between those hashes being the
+same. They may have been constructed differently or have had elements removed.
+In Perl 5.18, even if they were constructed the same way, you cannot depend on
+the same iteration order between them.
 
-Каждый хеш имеет тольк I<один> итератор для оператора C<each>. Вы не можете
-надёжно итерировать по хешу с помощью C<each> более одного раза; если вы начнёте
-новую итерацию, когда другая ещё не завершена, предыдущая преждевременно
-закончится, а последующая начнётся с середины хеша. Во время таких итераций
-остерегайтесь вызывать какие-либо функции, которые сами могут итерировать по
-хешу посредством C<each>.
+Each hash has only a I<single> iterator for the C<each> operator. You cannot
+reliably iterate over a hash with C<each> more than once; if you begin a new
+iteration while another is in progress, the former will end prematurely and the
+latter will begin partway through the hash. During such iteration, beware not
+to call any function which may itself try to iterate over the hash with
+C<each>.
 
-На практике такое случается редко, но если вам это нужно, сбросить итератор хеша
-можно с помощью C<keys> или C<values> в пустом контексте:
+In practice this occurs rarely. Reset a hash's iterator with C<keys> or
+C<values> in void context when you need it:
 
 =begin programlisting
 
-    # сброс итератора хеша
+    # reset hash iterator
     keys %addresses;
 
     while (my ($addressee, $address) = each %addresses)
@@ -348,22 +345,22 @@ X<builtins; C<each>>
 
 =end programlisting
 
-=head2 Срезы хешей
+=head2 Hash Slices
 
 X<hashes; slicing>
 X<slices; hash>
 
-I<Срез хеша> E<mdash> это список ключей и значений хеша, индексированных в одной
-операции. Так можно инициализировать несколько элементов хеша сразу:
+A I<hash slice> is a list of keys or values of a hash indexed in a single
+operation. To initialize multiple elements of a hash at once:
 
 =begin programlisting
 
-    # %cats уже содержит элементы
+    # %cats already contains elements
     @cats{qw( Jack Brad Mars Grumpy )} = (1) x 4;
 
 =end programlisting
 
-Это эквивалентно следующей инициализации:
+This is equivalent to the initialization:
 
 =begin programlisting
 
@@ -372,16 +369,16 @@ I<Срез хеша> E<mdash> это список ключей и значени
 
 =end programlisting
 
-E<hellip>за исключением того, что инициализация среза хеша не I<заменяет>
-существующее содержимое хеша.
+... except that the hash slice initialization does not I<replace> the existing
+contents of the hash.
 
 X<C<@>; sigil>
 X<sigils; C<@>>
 
-Срезы хеша также позволяют вам получить несколько значений из хеша в одной
-операции. Как и в случае срезов массива, сигил хеша изменяется для обозначения
-списочного контекста. Использование фигурных скобок указывает на доступ по ключу
-и делает хеш однозначным:
+Hash slices also allow you to retrieve multiple values from a hash in a single
+operation. As with array slices, the sigil of the hash changes to C<@> to
+indicate list context. The use of the curly braces indicates keyed access and
+makes the fact that you're working with a hash unambiguous:
 
 =begin programlisting
 
@@ -389,7 +386,7 @@ X<sigils; C<@>>
 
 =end programlisting
 
-Срезы хешей облегчают слияние двух хешей:
+Hash slices make it easy to merge two hashes:
 
 =begin programlisting
 
@@ -401,19 +398,22 @@ X<sigils; C<@>>
 
 =end programlisting
 
-Это эквивалентно ручному циклу по содержимому C<%canada_addresses>, но намного
-короче.
+This is equivalent to looping over the contents of C<%canada_addresses>
+manually, but is much shorter. Note that this relies on the iteration order of
+the hash remaining consistent between C<keys> and C<values>. Perl guarantees
+this, but only because these operations occur on the same hash and because
+nothing modifies the hash between the C<keys> and C<values> operations.
 
-Что если один и тот же ключ имеет место в обоих хешах? Подход со срезом хеша
-всегда I<перезаписывает> существующие пары ключ/значение в C<%addresses>. Если
-вам нужно другое поведение, больше подойдут циклы.
+What if the same key occurs in both hashes?  The hash slice approach always
+I<overwrites> existing key/value pairs in C<%addresses>. If you want other
+behavior, looping is more appropriate.
 
-=head2 Пустой хеш
+=head2 The Empty Hash
 
-Пустой хеш не содержит ни ключей, ни значений. Он даёт ложное значение в булевом
-контексте. Хеш, содержащий хотя бы одну пару ключ/значение, в булевом контексте
-даёт истинное значение, даже если все ключи, или все значения, или и то и
-другое, сами по себе в булевом контексте являются ложными значениями.
+An empty hash contains no keys or values. It evaluates to a false value in a
+boolean context. A hash which contains at least one key/value pair evaluates to
+a true value in boolean context even if all of the keys or all of the values or
+both would themselves evaluate to boolean false values.
 
 =begin programlisting
 
@@ -434,18 +434,19 @@ X<sigils; C<@>>
 
 =end programlisting
 
-В скалярном контексте хеш возвращает строку, представляющую соотношение полных корзин
-в хеше E<mdash> внутренние детали реализации хешей, которые вы смело можете
-игнорировать.
+In scalar context, a hash evaluates to a string which represents the ratio of
+full buckets in the hash--internal details about the hash implementation that
+you can safely ignore. (In a boolean scalar context, this ratio evaluates to a
+false value, so remember I<that> instead of the ratio details.)
 
-В списочном контексте хеш возвращает список пар ключ/значение, подобный тому, что вы
-получаете от оператора C<each>. Однако вы I<не можете> итерировать по этому
-списку так же, как итерируете по списку, выдаваемому C<each>, иначе цикл никогда
-не прервётся:
+In list context, a hash evaluates to a list of key/value pairs similar to the
+list produced by the C<each> operator. However, you I<cannot> iterate over this
+list the same way you can iterate over the list produced by C<each>. This loop
+will never terminate:
 
 =begin programlisting
 
-    # бесконечный цикл для непустых хешей
+    # infinite loop for non-empty hashes
     while (my ($key, $value) = %hash)
     {
         ...
@@ -453,18 +454,18 @@ X<sigils; C<@>>
 
 =end programlisting
 
-Вы I<можете> осуществлять цикл по ключам и значениям с помощью цикла C<for>, но
-переменная-итератор будет получать ключ на одной итерации и его значение на
-следующей, потому что Perl разгладит хеш в один список перемежающихся ключей и
-значений.
+You I<can> loop over the list of keys and values with a C<for> loop, but the
+iterator variable will get a key on one iteration and its value on the next,
+because Perl will flatten the hash into a single list of interleaved keys and
+values.
 
-=head2 Идиомы с хешами
+=head2 Hash Idioms
 
 X<hashes; finding uniques>
 
-Поскольку каждый ключ в хеше встречается только один раз, присваивание того же
-самого ключа хешу несколько раз сохраняет только самый последний ключ.
-Используйте это для нахождения уникальных элементов списка:
+Because each key exists only once in a hash, assigning the same key to a hash
+multiple times stores only the most recent value associated with that key. This
+behavior has advantages! For example, to find unique elements of a listlist :
 
 =begin programlisting
 
@@ -474,13 +475,13 @@ X<hashes; finding uniques>
 
 =end programlisting
 
-Использование C<undef> со срезом хеша устанавливает значения хеша в C<undef>.
-Эта идиома E<mdash> самый дешёвый способ выполнить операции установки значения
-с хешем.
+Using C<undef> with a hash slice sets the values of the hash to C<undef>. This
+idiom is the cheapest way to perform set operations with a hash.
 
 X<hashes; counting items>
 
-Хеши также полезны для подсчёта элементов, таких как IP-адреса в лог-файле:
+Hashes are also useful for counting elements, such as IP addresses in a log
+file:
 
 =begin programlisting
 
@@ -488,6 +489,7 @@ X<hashes; counting items>
 
     while (my $line = <$logfile>)
     {
+        chomp $line;
         my ($ip, $resource) = analyze_line( $line );
         $ip_addresses{$ip}++;
         ...
@@ -495,18 +497,17 @@ X<hashes; counting items>
 
 =end programlisting
 
-Начальное значение значений хеша E<mdash> C<undef>. Оператор постфиксного
-инкремента (C<++>) воспринимает его как ноль. Модификация значения
-инкрементирует существующее значения для этого ключа. Если значения для этого
-ключа не существует, Perl создаёт значение (C<undef>) и немедленно
-инкрементирует его до единицы, так как преобразование C<undef> в число даёт
-значение 0.
+The initial value of a hash value is C<undef>. The postincrement operator
+(C<++>) treats that as zero. This in-place modification of the value increments
+an existing value for that key. If no value exists for that key, Perl creates a
+value (C<undef>) and immediately increments it to one, as the numification of
+C<undef> produces the value 0.
 
 X<hashes; caching>
 X<orcish maneuver>
 
-Эта стратегия обеспечивает полезный механизм кеширования для сохранения
-результата дорогих операций с небольшим оверхедом:
+This strategy provides a useful caching mechanism to store the result of an
+expensive operation with little overhead:
 
 =begin programlisting
 
@@ -528,26 +529,27 @@ X<C<//>; infix operator>
 X<operators; C<//>>
 X<operators; defined-or>
 
-Этот I<орочий манёвр>N<Or-cache, orcish, если вы любите игру слов.> возвращает
-значение из хеша, если оно существует. В противном случае, он вычисляет,
-кеширует и возвращает значение. Оператор определено-или-присвоить (C<//=>)
-вычисляет свой левый операнд. Если этот операнд не определён, оператор
-присваивает левому значению значение своего правого операнда. Другими словами,
-если в хеше нет значения для заданного ключа, эта функция вызовет
-C<create_user()> с этим ключом и обновит хеш.
+This I<orcish maneuver>N<Or-cache, if you like puns spelled out.> returns the
+value from the hash, if it exists. Otherwise, it calculates, caches, and
+returns the value. The defined-or assignment operator (C<//=>) evaluates its
+left operand. If that operand is not defined, the operator assigns to the
+lvalue the value of its right operand. In other words, if there's no value in
+the hash for the given key, this function will call C<create_user()> with the
+key and update the hash.
 
-Операторы определено-или и определено-или-присвоить были представлены в
-Per 5.10. До 5.10 большая часть кода использовала оператор или-присвоить
-(C<||=>) для этой цели. К сожалению, некоторые валидные значения дают ложное
-значение в булевом контексте, так что вычисление I<определённости> значений
-почти всегда более правильно. Этот ленивый орочий манёвр проверяет
-определённость кешированного значения, не истинность.
+Perl 5.10 introduced the defined-or and defined-or assignment operators. Prior
+to 5.10, most code used the boolean-or assignment operator (C<||=>) for this
+purpose. Unfortunately, some valid values evaluate to a false value in boolean
+context, so evaluating the I<definedness> of values is almost always more
+accurate. This lazy orcish maneuver tests for the definedness of the cached
+value, not truthiness. You may still see code with the pre-5.10 behavior. When
+you do, consider whether the defined-or operator makes more sense.
 
 X<hashes; named parameters>
 
-Если ваша функция принимает несколько аргументов, используйте захватывающий хеш
-(L<parameter_slurping>) для сбора пар ключ/значение в один хеш как именованных
-аргументов функции:
+If your function takes several arguments, use a slurpy hash
+(L<parameter_slurping>) to gather key/value pairs into a single hash as named
+function arguments:
 
 =begin programlisting
 
@@ -562,7 +564,7 @@ X<hashes; named parameters>
 
 =end programlisting
 
-Этот подход позволяет вам устанавливать значения по умолчанию:
+This approach allows you to set default values:
 
 =begin programlisting
 
@@ -577,8 +579,8 @@ X<hashes; named parameters>
 
 =end programlisting
 
-E<hellip>или включать их в инициализацию хеша, так как последующее присваивание
-перезаписывает предыдущие:
+... or include them in the hash initialization, as latter assignments take
+precedence over earlier assignments:
 
 =begin programlisting
 
@@ -596,25 +598,29 @@ E<hellip>или включать их в инициализацию хеша, т
 
 =end programlisting
 
-=head2 Блокировка хешей
+=head2 Locking Hashes
 
 Z<locked_hashes>
 
 X<hashes; locked>
+X<C<Hash::Util>>
+X<C<Hash::Util>; C<lock_keys>>
+X<C<Hash::Util>; C<lock_value>>
+X<C<Hash::Util>; C<lock_hash>>
+X<C<Hash::Util>; C<unlock_hash>>
 
-Так как ключи хешей E<mdash> голые слова, они мало защищены от опечаток по
-сравнению с защитой имён функций и переменных, предлагаемой прагмой C<strict>.
-Редко используемый базовый модуль C<Hash::Util> предоставляет механизмы для
-улучшения этой ситуации.
+As hash keys are barewords, they offer little typo protection compared to the
+function and variable name protection offered by the C<strict> pragma. The
+little-used core module C<Hash::Util> can make hashes safer.
 
-Чтобы не дать кому-либо случайно добавить ключ хеша, который вы не намеревались
-(в случае опечатки или из ненадёжного пользовательского ввода), используйте
-функцию C<lock_keys()> чтобы ограничить хеш его текущим набором ключей. Любая
-попытка добавить новый ключ в хеш выбросит исключение. Эта слабая мера
-безопасности годится только для предотвращения случайностей; кто угодно
-может использовать функцию C<unlock_keys()> чтобы удалить эту защиту.
+To prevent someone from accidentally adding a hash key you did not intend
+(whether as a typo or from untrusted user input), use the C<lock_keys()>
+function to restrict the hash to its current set of keys. Any attempt to add a
+new key to the hash will raise an exception. Similarly you can lock or unlock
+the existing value for a given key in the hash (C<lock_value()> and
+C<unlock_value()>) and make or unmake the entire hash read-only with
+C<lock_hash()> and C<unlock_hash()>.
 
-Аналогично вы можете заблокировать или разблокировать существующее значение для
-заданного ключа хеша (C<lock_value()> и C<unlock_value()>) и сделать весь хеш
-доступным только для чтения или лишить его этого свойства с помощью
-C<lock_hash()> и C<unlock_hash()>.
+This is lax security; anyone can use the appropriate unlocking functions to
+work around the locking. Yet it does protect against typos and other accidental
+behavior.

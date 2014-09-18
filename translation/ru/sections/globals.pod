@@ -1,33 +1,29 @@
-=encoding utf-8
-
-=head1 Глобальные переменные
+=head1 Global Variables
 
 Z<globals>
 
 X<super globals>
 X<variables; super global>
 
-Perl 5 предоставляет несколько I<суперглобальных переменных>, которые поистине
-глобальны, не ограничены областью видимости пакета или файла. К сожалению, их
-глобальная доступность означает, что любые прямые или непрямые модификации могут
-повлиять на другие части программы E<mdash> и они немногословны. Опытные
-программисты на Perl 5 запоминают некоторые из них. Мало кто помнит их все. Лишь
-некоторые из них бывают полезны. C<perldoc perlvar> содержит исчерпывающий
-список таких переменных.
+Perl provides several I<super global variables> that are truly global, not
+scoped to a package or file. Unfortunately, their global availability means
+that any direct or indirect modifications may have effects on other parts of
+the program--and they're terse. Experienced Perl hackers have memorized some of
+them. Few people have memorized all of them. Only a handful are ever useful.
+C<perldoc perlvar> contains the exhaustive list of these variables.
 
-=head2 Управление суперглобальными переменными
+=head2 Managing Super Globals
 
 X<super globals; managing>
 X<builtins; C<local>>
 
-Perl 5 продолжает перемещать ещё больше глобального поведения в лексическое
-поведение, так что вы можете избежать многих из этих глобальных переменных.
-Когда вы не можете их избежать, используйте C<local> в наименьшей возможной
-области видимости чтобы ограничить любые изменения. Вы всё ещё восприимчивы к
-любым изменениям, которые I<вызываемый> вами код сделает с этими глобальными
-переменными, но вы уменьшаете вероятность неожиданного кода I<снаружи> вашей
-области видимости. Как демонстрирует идиома лёгкого поглощения файла
-(L<easy_file_slurping>), C<local> зачастую правильный подход:
+As Perl evolves, it moves more global behavior into lexical behavior, so that
+you can avoid many of these globals. When you can't avoid them, use C<local> in
+the smallest possible scope to constrain any modifications. You are still
+susceptible to any changes code you I<call> makes to those globals, but you
+reduce the likelihood of surprising code I<outside> of your scope. As the easy
+file slurping idiom (L<easy_file_slurping>) demonstrates, C<local> is often the
+right approach:
 
 =begin programlisting
 
@@ -35,23 +31,22 @@ Perl 5 продолжает перемещать ещё больше глоба�
 
 =end programlisting
 
-Эффект локализации C<$/> длится только до конца блока. Невелик шанс, что
-какой-либо Perl-код будет выполнен как результат чтения строк из дескриптора
-файлаN<Связанный дескриптор файла (L<tie>) E<mdash> одна из немногих
-вероятностей.> и изменит значение C<$/> внутри блока C<do>.
+The effect of C<local>izing C<$/> lasts only through the end of the block.
+There is a low chance that any Perl code will run as a result of reading lines
+from the filehandleN<A tied filehandle (L<tie>) is one of the few
+possibilities.> and change the value of C<$/> within the C<do> block.
 
-Не все случаюи использования суперглобальных переменных так легко защитить, но это
-зачастую работает.
+Not all cases of using super globals are this easy to guard, but this often
+works.
 
 X<C<eval>>
 X<exceptions; catching>
 X<exceptions; C<$@>>
 
-В других случаях вам нужно I<прочитать> значение суперглобальной переменной, и
-надеяться, что другой код его не изменил. Отлавливание исключений с помощью
-блока C<eval> может быть восприимчиво к условиям гонки, поскольку метод
-C<DESTROY()>, вызванный на лексической переменной, которая вышла за пределы
-области видимости, может сбросить C<$@>:
+Other times you need to I<read> the value of a super global and hope that no
+other code has modified it. Catching exceptions with an C<eval> block is
+susceptible at least one race condition where C<DESTROY()> methods invoked on
+lexicals that have gone out of scope may reset C<$@>:
 
 =begin programlisting
 
@@ -63,16 +58,15 @@ C<DESTROY()>, вызванный на лексической переменно�
 
 =end programlisting
 
-Копируйте C<$@> I<сразу же> после поимки исключения, чтобы сохранить её
-содержимое. Смотрите также C<Try::Tiny> вместо этого (L<exception_caveats>).
+Copy C<$@> I<immediately> after catching an exception to preserve its contents.
+See also C<Try::Tiny> instead (L<exception_caveats>).
 
-=head2 Английские имена
+=head2 English Names
 
 X<C<English>>
 
-Базовый модуль C<English> предоставляет подробные имена для насыщенных
-пунктуацией суперглобальных переменных. Импортируйте их в пространство имён
-следующим образом:
+The core C<English> module provides verbose names for punctuation-heavy super
+globals. Import them into a namespace with:
 
 =begin programlisting
 
@@ -80,8 +74,8 @@ X<C<English>>
 
 =end programlisting
 
-Это позволит вам использовать подробные имена, документированные в C<perldoc
-perlvar>, внутри области видимости этой прагмы.
+This allows you to use the verbose names documented in C<perldoc perlvar>
+within the scope of this pragma.
 
 X<C<$&>>
 X<global variables; C<$&>>
@@ -90,22 +84,19 @@ X<global variables; C<$`>>
 X<C<$'>>
 X<global variables; C<$'>>
 
-Три связанных с регулярными выражениями суперглобальных переменных (C<$&>, C<$`>
-и C<$'>) приводят к снижению производительности I<всех> регулярных
-выражений в программе. Если вы забудете C<-no_match_vars> при импорте, ваша
-программа получит минус производительности, даже если вы не читаете явно из этих
-переменных.
+Three regex-related super globals (C<$&>, C<$`>, and C<$'>) impose a global
+performance penalty for I<all> regular expressions within a program. If you
+forget the C<-no_match_vars> import, your program will suffer the penalty even
+if you don't explicitly read from those variables. Modern Perl programs can use
+the C<@-> variable instead of them.
 
-Программы на Современном Perl должны использовать переменную C<@-> как замену
-для этих ужасных трёх.
-
-=head2 Полезные суперглобальные переменные
+=head2 Useful Super Globals
 
 X<super globals; useful>
 
-Большая часть программ на современном Perl 5 может обойтись использованием
-только нескольких из суперглобальных переменных. Вы с большой вероятностью
-встретите лишь немногие из этих переменных в реальных программах.
+Most modern Perl programs can get by with using only a couple of the super
+globals. You're most likely to encounter only a few of these variables in real
+programs.
 
 X<C<$/>>
 X<global variables; C<$/>>
@@ -115,127 +106,124 @@ X<C<readline>>
 
 =over 4
 
-=item * C<$/> (или C<$INPUT_RECORD_SEPARATOR> из прагмы C<English>) это строка
-из нуля или более символов, обозначающая конец записи при построчном чтении
-входных данных. По умолчанию, это платформозависимая последовательность символов
-новой строки. Если вы сделаете это значение неопределённым, Perl будет пытаться
-прочитать файл в память целиком. Если вы установите это значение в I<ссылку> на
-целое число, Perl будет пытаться прочитать именно столько I<байт> на запись (так
-что не забывайте о вопросах Юникода). Если вы установите это значение в пустую
-строку (C<''>), Perl будет читать по параграфу за раз, где параграф E<mdash> это
-порция текста, за которой следует произвольное количество новых строк.
+=item * C<$/> (or C<$INPUT_RECORD_SEPARATOR> from the C<English> pragma) is a
+string of zero or more characters which denotes the end of a record when
+reading input a line at a time. By default, this is your platform-specific
+newline character sequence. If you undefine this value, Perl will attempt to
+read the entire file into memory. If you set this value to a I<reference> to an
+integer, Perl will try to read that many I<bytes> per record (so beware of
+Unicode concerns). If you set this value to an empty string (C<''>), Perl will
+read in a paragraph at a time, where a paragraph is a chunk of text followed by
+an arbitrary number of newlines.
 
 X<C<$.>>
 X<global variables; C<$.>>
 X<C<$INPUT_LINE_NUMBER>>
 X<global variables; C<$INPUT_LINE_NUMBER>>
 
-=item * C<$.> (C<$INPUT_LINE_NUMBER>) содержит количество записей, прочитанных
-из дескриптора файла, к которому последний раз осуществлялся доступ. Вы можете
-читать из этой переменной, но запись в неё не даст никакого эффекта. Локализация
-этой переменной будет локализовать дескриптор файла, на который она ссылается.
+=item * C<$.> (C<$INPUT_LINE_NUMBER>) contains the number of records read from
+the most recently-accessed filehandle. You can read from this variable, but
+writing to it has no effect. Localizing this variable will localize the
+filehandle to which it refers.
 
 X<C<$|>>
 X<global variables; C<$|>>
 X<C<$OUTPUT_AUTOFLUSH>>
 X<global variables; C<$OUTPUT_AUTOFLUSH>>
 
-=item * C<$|> (C<$OUTPUT_AUTOFLUSH>) управляет тем, будет ли Perl сбрасывать
-всё, что записано в текущий выбранный дескриптор файла, сразу же, или только
-когда буфер Perl заполнится. Небуферизованный вывод полезен при записи в канал,
-или сокет, или терминал, который не должен блокироваться ожиданием ввода. Эта
-переменная будет приводить любые присвоенные ей значение в булевы.
+=item * C<$|> (C<$OUTPUT_AUTOFLUSH>) governs whether Perl will flush everything
+written to the currently selected filehandle immediately or only when Perl's
+buffer is full. Unbuffered output is useful when writing to a pipe or socket or
+terminal which should not block waiting for input. This variable will coerce
+any values assigned to it to boolean values.
 
 X<C<@ARGV>>
 X<global variables; C<@ARGV>>
 
-=item * C<@ARGV> содержит агрументы командной строки, переданные в программу.
+=item * C<@ARGV> contains the command-line arguments passed to the program.
 
 X<C<$!>>
 X<global variables; C<$!>>
 X<C<$ERRNO>>
 X<global variables; C<$ERRNO>>
 
-=item * C<$!> (C<$ERRNO>) это двойная переменная (L<dualvars>), содержащая
-результат I<последнего> системного вызова. В числовом контексте она
-соответствует значению C<errno> в C, где всё, кроме ноля, обозначает ошибку. В
-строковом контексте она возвращает соответствующую строку системной ошибки.
-Локализуйте эту переменную, прежде чем выполнить системный вызов (явно или
-неявно), чтобы избежать перезаписывания соответствующего значения для другого
-кода где бы то ни было. Многие места в самом Perl 5 делают системные вызовы, о
-которых вы не знаете, так что значение этой переменной может измениться
-независимо от вас. Копируйте его I<сразу же> после выполнения системного вызова
-для получения наиболее точных результатов.
+=item * C<$!> (C<$ERRNO>) is a dualvar (L<dualvars>) which contains the result
+of the I<most recent> system call. In numeric context, this corresponds to C's
+C<errno> value, where anything other than zero indicates an error. In string
+context, this evaluates to the appropriate system error string. Localize this
+variable before making a system call (implicitly or explicitly) to avoid
+overwriting the appropriate value for other code elsewhere. Perl's internals
+make system calls sometimes, so the value of this variable can change out from
+under you. Copy it I<immediately> after causing a system call to get accurate
+results.
 
 X<C<$">>
 X<global variables; C<$">>
 X<C<$LIST_SEPARATOR>>
 X<global variables; C<$LIST_SEPARATOR>>
 
-=item * C<$"> (C<$LIST_SEPARATOR>) это строка, используемая для разделения
-элементов массивов и списков, интерполируемых в строку.
+=item * C<$"> (C<$LIST_SEPARATOR>) is a string used to separate array and list
+elements interpolated into a string.
 
 X<C<%+>>
 X<global variables; C<%+>>
 
-=item * C<%+> содержит именованные захваты из успешного сопоставления
-регулярному выражению (L<named_captures>).
+=item * C<%+> contains named captures from successful regular expression
+matches (L<named_captures>).
 
 X<C<$@>>
 X<global variables; C<$@>>
 X<C<$EVAL_ERROR>>
 X<global variables; C<$EVAL_ERROR>>
 
-=item * C<$@> (C<$EVAL_ERROR>) содержит значение, выброшенное из последнего
-исключения  (L<catching_exceptions>).
+=item * C<$@> (C<$EVAL_ERROR>) contains the value thrown from the most recent
+exception (L<catching_exceptions>).
 
 X<C<$0>>
 X<global variables; C<$0>>
 X<C<$PROGRAM_NAME>>
 X<global variables; C<$PROGRAM_NAME>>
 
-=item * C<$0> (C<$PROGRAM_NAME>) содержит имя выполняемой программы. Вы можете
-модифицировать это значение на некоторых Unix-подобных платформах чтобы изменить
-имя программы, под которым она предстаёт перед другими программами, такими как
-C<ps> или C<top>.
+=item * C<$0> (C<$PROGRAM_NAME>) contains the name of the program currently
+executing. You may modify this value on some Unix-like platforms to change the
+name of the program as it appears to other programs on the system, such as
+C<ps> or C<top>.
 
 X<C<$$>>
 X<global variables; C<$$>>
 X<C<$PID>>
 X<global variables; C<$PID>>
 
-=item * C<$$> (C<$PID>) содержит идентификатор процесса текущего выполняемого
-экземпляра программы, как его понимает операционная система. Он будет
-различаться между программами, разветвлёнными с помощью C<fork()>, и I<может>
-различаться между потоками в одной и той же программе.
+=item * C<$$> (C<$PID>) contains the process id of the currently running
+instance of the program, as the operating system understands it. This will vary
+between C<fork()>ed programs and I<may> vary between threads in the same
+program.
 
 X<C<@INC>>
 X<global variables; C<@INC>>
 
-=item * C<@INC> содержит список путей в файловой системе, по которым Perl будет
-искать файлы для загрузки с помощью C<use> или C<require>. Смотрите C<perldoc -f
-require> для информации о других элементах, которые этот массив может содержать.
+=item * C<@INC> holds a list of filesystem paths in which Perl will look for
+files to load with C<use> or C<require>. See C<perldoc -f require> for other
+items this array can contain.
 
 X<C<%SIG>>
 X<global variables; C<%SIG>>
 
-=item * C<%SIG> ставит в соответствие низкоуровневым сигналам ОС и Perl ссылки
-на функции, используемые для обработки этих сигналов. Например, можно отловить
-стандартное прерывание по Ctrl-C с помощью сигнала C<INT>. См. C<perldoc
-perlipc> для большей информации о сигналах и особенно безопасных сигналах.
+=item * C<%SIG> maps OS and low-level Perl signals to function references used
+to handle those signals. Trap the standard Ctrl-C interrupt by catching the
+C<INT> signal, for example. See C<perldoc perlipc> for more information about
+signals and signal handling.
 
 =back
 
-=head2 Альтернативы суперглобальным переменным
+=head2 Alternatives to Super Globals
 
 X<super globals; alternatives>
 X<C<Try::Tiny>>
 
-Самые тяжёлые обвинения о воздействии на расстоянии относятся к вводу/выводу и
-исключительным условиям. Использование C<Try::Tiny> (L<exception_caveats>)
-поможет вам защититься от хитрой семантики правильной обработки исключений.
-Локализация и копирование значения C<$!> может помощь вам избежать странных
-поведений, когда Perl выполняет неявные системные вызовы. Использование
-C<IO::File> и его методов на лексических дескрипторах файлов
-(L<file_handling_variables>) поможет предотвратить нежелательные глобальные
-изменения поведения ввода/вывода.
+IO and exceptions are the worst perpetrators of action at a distance.  Use
+C<Try::Tiny> (L<exception_caveats>) to insulate you from the tricky semantics
+of proper exception handling. C<local>ize and copy the value of C<$!> to avoid
+strange behaviors when Perl makes implicit system calls. Use C<IO::File> and
+its methods on lexical filehandles (L<file_handling_variables>) to limit
+unwanted global changes to IO behavior.

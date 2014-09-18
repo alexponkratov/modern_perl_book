@@ -1,0 +1,1112 @@
+=encoding utf-8
+
+Z<regular_expressions>
+
+=head1 Литералы
+
+X<regex; literals>
+
+Регулярные выражения могут быть простыми шаблонами подстрок:
+
+=begin programlisting
+
+    my $name = 'Chatfield';
+    say 'Found a hat!' if $name =~ B</hat/>;
+
+=end programlisting
+
+X<operators; match>
+X<operators; C<//>>
+X<operators; C<m//>>
+X<regex; atom>
+X<atom>
+
+Оператор сопоставления (I<match>, C<m//>, сокращёно C<//>) распознаёт
+регулярное выражение, в этом примере E<mdash> C<hat>. Этот шаблон E<mdash>
+I<не> слово. Он означает E<laquo>символ C<h>, за которым следует символ C<a>,
+за которым следует символ C<t>E<raquo>. Каждый символ в шаблоне E<mdash>
+неделимый элемент, или I<атом>. Он либо совпадает, либо нет.
+
+X<operators; C<=~>>
+X<C<=~>; regex bind>
+X<operators; C<!~>>
+X<C<!~>; negated regex bind>
+
+Оператор связывания с регулярным выражением (C<=~>) E<mdash> инфиксный оператор
+(L<fixity>), который применяет регулярное выражение, являющееся его вторым
+операндом к строке, указанной в качестве первого операнда. При использовании в
+скалярном контексте, сопоставление возвращает истинное значение в случае успеха.
+Отрицательная форма оператора связывания (C<!~>) возвращает истинное значение
+в случае неудачного сопоставления.
+
+=begin tip Запомните C<index>!
+
+X<builtins; C<index>>
+
+Встроенная функция C<index> тоже может осуществлять поиск литеральной подстроки
+в строке. Использование для этого механизма регулярных выражений E<mdash> это
+как полёт на автономном боевом вертолёте в магазин на углу за сыром, но
+Perl позволяет вам решать, что вы находите более поддерживаемым.
+
+=end tip
+
+X<operators; substitution>
+X<operators; C<s///>>
+
+Оператор замены, C<s///>, это, в некотором смысле, циркумфиксный оператор
+(L<fixity>) с двумя операндами. Его первый операнд E<mdash> регулярное выражение
+для поиска соответствия при использовании с оператором связывания с регулярным
+выражением. Второй операнд E<mdash> подстрока, используемая для замены
+сопоставленной части первого операнда. Например, вылечить надоедливые летние
+аллергии можно так:
+
+=begin programlisting
+
+    my $status = 'I feel ill.';
+    $status    =~ s/ill/well/;
+    say $status;
+
+=end programlisting
+
+=head1 Оператор qr// и объединения регулярных выражений
+
+X<operators; C<qr//>>
+X<C<qr//>; compile regex operator>
+X<regex; C<qr//>>
+X<regex; first-class>
+
+Оператор C<qr//> создаёт регулярные выражения первого класса. Для использования
+интерполируйте их в оператор сопоставления:
+
+=begin programlisting
+
+    my $hat = B<qr/hat/>;
+    say 'Found a hat!' if $name =~ /$hat/;
+
+=end programlisting
+
+E<hellip>или объедините несколько регулярных выражений в составные шаблоны:
+
+=begin programlisting
+
+    my $hat   = qr/hat/;
+    my $field = qr/field/;
+
+    say 'Found a hat in a field!'
+        if $name =~ /B<$hat$field>/;
+
+    like( $name, qr/B<$hat$field>/,
+                   'Found a hat in a field!' );
+
+=end programlisting
+
+=begin tip Like C<is>, with More C<like>
+
+X<CPAN; C<Test::More>>
+X<C<like>>
+
+Функция C<like> модуля C<Test::More> проверяет, что первый аргумент
+соответствует регулярному выражению, указанному как второй аргумент.
+
+=end tip
+
+=head1 Квантификаторы
+
+X<regex; quantifiers>
+X<regex; zero or one quantifier>
+X<C<?>; zero or one regex quantifier>
+
+Регулярные выражения становятся более мощными благодаря использованию
+I<квантификаторов регулярных выражений>, который позволяют вам указать, сколько
+раз компонент регулярного выражения может появляться в строке. Самый простой
+квантификатор E<mdash> I<квантификатор E<laquo>ноль или одинE<raquo>>, или C<?>:
+
+=begin programlisting
+
+    my $cat_or_ct = qr/caB<?>t/;
+
+    like( 'cat', $cat_or_ct, "'cat' matches /ca?t/" );
+    like( 'ct',  $cat_or_ct, "'ct' matches /ca?t/"  );
+
+=end programlisting
+
+Любой атом в регулярном выражении, за которым следует символ C<?>, означает
+E<laquo>найти ноль или одни таких атомовE<raquo>. Это регулярное выражение
+проходит сопоставление, если один или более символов C<a> следуют
+сразу за символом C<c> и непосредственно предшествуют символу C<t>, будь это
+литеральная подстрока C<cat> или C<ct>.
+
+X<regex; one or more quantifier>
+X<C<+>; one or more regex quantifier>
+
+I<Квантификатор E<laquo>один или болееE<raquo>>, или C<+>, проходит сопоставление
+только если есть как минимум одно вхождение квантифицируемого атома:
+
+=begin programlisting
+
+    my $some_a = qr/caB<+>t/;
+
+    like( 'cat',    $some_a, "'cat' matches /ca+t/" );
+    like( 'caat',   $some_a, "'caat' matches/"      );
+    like( 'caaat',  $some_a, "'caaat' matches"      );
+    like( 'caaaat', $some_a, "'caaaat' matches"     );
+
+    unlike( 'ct',   $some_a, "'ct' does not match"  );
+
+=end programlisting
+
+Нет теоретического ограничения максимального количества квантифицированных
+атомов, которые могут пройти сопоставление.
+
+X<quantifiers; zero or more>
+X<C<*>; zero or more regex quantifier>
+
+I<Квантификатор E<laquo>ноль или болееE<raquo>>, C<*>, находит соответствие ноля
+или более экземпляров квантифицируемого атома:
+
+=begin programlisting
+
+    my $any_a = qr/caB<*>t/;
+
+    like( 'cat',    $any_a, "'cat' matches /ca*t/" );
+    like( 'caat',   $any_a, "'caat' matches"       );
+    like( 'caaat',  $any_a, "'caaat' matches"      );
+    like( 'caaaat', $any_a, "'caaaat' matches"     );
+    like( 'ct',     $any_a, "'ct' matches"         );
+
+=end programlisting
+
+Как бы глупо это ни выглядело, это позволяет вам указать необязательные
+компоненты регулярного выражения. Всё же, используйте это экономно: это грубый и
+дорогой инструмент. I<Большинство> регулярных выражений получают гораздо больше
+выгоды от использования C<?> и C<+>, чем от C<*>. Точность намерений зачастую
+увеличивает ясность.
+
+X<numeric quantifiers>
+X<C<{}>; regex numeric quantifier>
+
+I<Количественные квантификаторы> выражают конкретное количество возможных
+повторений атома. C<{n}> означает, что совпадение должно быть найдено ровно I<n>
+раз.
+
+=begin programlisting
+
+    # эквивалентно qr/cat/;
+    my $only_one_a = qr/caB<{1}>t/;
+
+    like( 'cat', $only_one_a, "'cat' matches /ca{1}t/" );
+
+=end programlisting
+
+C<{n,}> требует I<как минимум> I<n> повторений:
+
+=begin programlisting
+
+    # эквивалентно qr/ca+t/;
+    my $some_a = qr/caB<{1,}>t/;
+
+    like( 'cat',    $some_a, "'cat' matches /ca{1,}t/" );
+    like( 'caat',   $some_a, "'caat' matches"          );
+    like( 'caaat',  $some_a, "'caaat' matches"         );
+    like( 'caaaat', $some_a, "'caaaat' matches"        );
+
+=end programlisting
+
+C<{n,m}> означает, что должно быть как минимум I<n>, но не более I<m>
+совпадений:
+
+=begin programlisting
+
+    my $few_a = qr/caB<{1,3}>t/;
+
+    like( 'cat',    $few_a, "'cat' matches /ca{1,3}t/" );
+    like( 'caat',   $few_a, "'caat' matches"           );
+    like( 'caaat',  $few_a, "'caaat' matches"          );
+
+    unlike( 'caaaat', $few_a, "'caaaat' doesn't match" );
+
+=end programlisting
+
+Вы можете выразить символьные квантификаторы в терминах количественных
+квантификаторов, но большинство программ, как правило, используют первые.
+
+=head1 Жадность
+
+X<greedy quantifiers>
+X<quantifiers; greedy>
+
+Квантификаторы C<+> и C<*> E<mdash> I<жадные>, они пытаются сопоставить
+настолько большую часть входной строки, насколько можно. Это особенно пагубное
+поведение. Рассмотрите наивное использование шаблона E<laquo>ноль или более
+символов, не являющихся символами перевода строкиE<raquo> C<.*>:
+
+=begin programlisting
+
+    # плохое регулярное выражение
+    my $hot_meal = qr/hot.*meal/;
+
+    say 'Found a hot meal!'
+        if 'I have a hot meal' =~ $hot_meal;
+
+    say 'Found a hot meal!'
+         if 'one-shot, piecemeal work!' =~ $hot_meal;
+
+=end programlisting
+
+Жадные квантификаторы начинают с того, что сопоставляют I<всё>, а затем
+возвращаются на один символ за раз только если очевидно, что сопоставление
+не успешно.
+
+X<C<?>; zero or one regex quantifier>
+X<C<*?>; non-greedy zero or one regex quantifier>
+
+Модификатор C<?>, добавленный к квантификатору, делает жадный квантификатор
+бережливым:
+
+=begin programlisting
+
+    my $minimal_greedy = qr/hot.*?meal/;
+
+=end programlisting
+
+При использовании нежадного квантификатора, механизм регулярных выражений
+предпочтёт по возможности I<наикратчайшее> потенциальное совпадение и будет
+увеличивать количество символов, идентифицируемых токеном C<.*?>, только если
+текущее количество не проходит сопоставление. Поскольку C<*> требует
+нуля или более повторений, минимальное потенциальное совпадение для этого токена
+E<mdash> ноль символов:
+
+=begin programlisting
+
+    say 'Found a hot meal'
+    if 'ilikeahotmeal' =~ /$minimal_greedy/;
+
+=end programlisting
+
+X<C<+?>; non-greedy one or more regex quantifier>
+
+Для нежадной проверки одного или более элементов используйте C<+?>:
+
+=begin programlisting
+
+    my $minimal_greedy_plus = qr/hot.+?meal/;
+
+    unlike( 'ilikeahotmeal', $minimal_greedy_plus );
+
+    like( 'i like a hot meal', $minimal_greedy_plus );
+
+=end programlisting
+
+X<C<??>; non-greedy zero or one regex quantifier>
+
+Модификатор C<?> применим также и к квантификатору C<?> (ноль или более
+совпадений), как и к квантификаторам диапазона. В каждом случае он заставляет
+регулярное выражение захватывать настолько мало входных данных, насколько возможно.
+
+Жадные шаблоны C<.+> и C<.*> соблазнительны, но опасны. КроссвордистN<Любитель
+разгадывания кроссвордов.>, которому нужно заполнить 7 по вертикали
+(E<laquo>Богатая почваE<raquo>) найдёт слишком много неверных кандидатов со
+следующим шаблоном:
+
+=begin programlisting
+
+    my $seven_down   = qr/l$letters_only*m/;
+
+=end programlisting
+
+Придётся отбросить C<Alabama>, C<Belgium> и C<Bethlehem> задолго до того, как
+программа предложит C<loam>. Эти слова не только слишком длинные, но и
+соответствие начинается с середины слов. Рабочее понимание жадности поможет,
+но ничто не заменит обширное тестирование на реальных рабочих данных.
+
+=head1 Якоря регулярных выражений
+
+X<regex; anchors>
+X<anchors; start of string>
+X<C<\A>; start of string regex metacharacter>
+
+I<Якоря регулярных выражений> заставляют механизм регулярных выражений начинать
+или заканчивать сопоставление на абсолютной позиции. I<Якорь начала строки> (C<\A>)
+требует, чтобы любое соответствие начиналось с начала строки:
+
+=begin programlisting
+
+    # также соответствует "lammed", "lawmaker" и "layman"
+    my $seven_down = qr/\Al${letters_only}{2}m/;
+
+=end programlisting
+
+X<anchors; end of string>
+X<C<\Z>; end of string regex metacharacter>
+
+I<Якорь конца строки> (C<\Z>) требует, чтобы соответствие заканчивалось в конце
+строки.
+
+=begin programlisting
+
+    # также соответствует "loom", но уже очевидное улушение
+    my $seven_down = qr/\Al${letters_only}{2}m\Z/;
+
+=end programlisting
+
+X<word boundary metacharacter>
+X<C<\b>; word boundary regex metacharacter>
+
+I<Якорь границы слова> (C<\b>) находит соответствие только на границе между
+символом слова (C<\w>) и несловарным символом (C<\W>). Используйте регулярное
+выражение с якорями, чтобы найти C<loam>, отбросив C<Belgium>:
+
+=begin programlisting
+
+    my $seven_down = qr/\bl${letters_only}{2}m\b/;
+
+=end programlisting
+
+=head1 Метасимволы
+
+X<regex; metacharacters>
+X<regex; metacharacters>
+X<metacharacters; regex>
+
+Perl интерпретирует некоторые символы в регулярных выражениях как
+I<метасимволы>, символы, представляющие нечто отличное от их буквальной
+интерпретации. Метасимволы пользователям регулярных выражений силу, далеко
+выходящую за рамки всего лишь поиска подстрок. Механизм регулярных выражений
+обрабатывает все метасимволы как атомы.
+
+X<regex; C<.>>
+X<C<.>; anything but newline regex metacharacter>
+
+Метасимвол C<.> означает E<laquo>соответствие любому символу, исключая перевод
+строкиE<raquo>. Запомните это пояснение; многие новички его забывают. Простой
+поиск по регулярному выражению E<mdash> не принимая в счёт явное улучшение с
+использованием якорей E<mdash> для 7 по вертикали может быть C</l..m/>. Конечно,
+всегда есть более чем один способ получить правильный ответ:
+
+=begin programlisting
+
+    for my $word (@words)
+    {
+        next unless length( $word ) == 4;
+        next unless $word =~ /lB<..>m/;
+        say "Possibility: $word";
+    }
+
+=end programlisting
+
+X<regex; C<\w>>
+X<C<\w>; alphanumeric regex metacharacter>
+
+Если потенциальные совпадения в C<@words> E<mdash> более, чем простые английские
+слова, вы получите ложноположительные результаты. C<.> также соответствует
+знакам пунктуации, пробельным символам и числам. Будьте точны! Метасимвол
+C<\w> представляет все буквенно-числовые символы (L<unicode>) и символ
+подчёркивания:
+
+=begin programlisting
+
+        next unless $word =~ /lB<\w\w>m/;
+
+=end programlisting
+
+X<regex; C<\d>>
+X<C<\d>; digit regex metacharacter>
+
+Метасимвол C<\d> соответствует цифрам (тоже в смысле Юникод):
+
+=begin programlisting
+
+    # ненадёжная проверка телефонных номеров
+    next unless $number =~ /B<\d>{3}-B<\d>{3}-B<\d>{4}/;
+    say "I have your number: $number";
+
+=end programlisting
+
+X<regex; C<\s>>
+X<C<\s>; whitespace regex metacharacter>
+
+Используйте метасимвол C<\s> для сопоставления пробельным символам, будь это литеральный
+пробел, символ табуляции, возврат каретки, подача страницы или перевод строки:
+
+=begin programlisting
+
+    my $two_three_letter_words = qr/\w{3}B<\s>\w{3}/;
+
+=end programlisting
+
+X<regex; C<\B>>
+X<regex; C<\D>>
+X<regex; C<\S>>
+X<regex; C<\W>>
+X<C<\B>; non-word boundary regex metacharacter>
+X<C<\D>; non-digit regex metacharacter>
+X<C<\S>; non-whitespace regex metacharacter>
+X<C<\W>; non-alphanumeric regex metacharacter>
+
+=begin tip Отрицательные метасимволы
+
+Эти метасимволы имеют отрицательные формы. Используйте C<\W> для поиска любого
+символа, I<исключая> словарные символы. Используйте C<\D> для поиска нецифровых
+символов. Используйте C<\S> для поиска чего угодно, кроме пробельных символов.
+Используйте C<\B> для сопоставления где угодно, кроме границы слова.
+
+=end tip
+
+=head1 Классы символов
+
+Z<character_classes>
+X<character classes>
+X<C<[]>; character class regex metacharacters>
+
+Если все эти метасимволы недостаточно точны, определите свой
+собственный I<класс символов>, заключив их в квадратные скобки:
+
+=begin programlisting
+
+    my $ascii_vowels = qr/B<[>aeiouB<]>/;
+    my $maybe_cat    = qr/c${ascii_vowels}t/;
+
+=end programlisting
+
+=begin tip Интерполяция случается
+
+Без фигурных скобок парсер Perl интерпретирует имя переменной как
+C<$ascii_vowelst>, что либо вызовет ошибку времени компиляции о неизвестной
+переменной, или интерполирует в регулярное выражение содержимое существующей
+переменной C<$ascii_vowelst>.
+
+=end tip
+
+X<C<->; character class range regex metacharacter>
+
+Символ дефиса (C<->) позволяет указывать в классе непрерывный диапазон символов,
+как в регулярном выражении C<$ascii_letters_only>:
+
+=begin programlisting
+
+    my $ascii_letters_only = qr/[a-zA-Z]/;
+
+=end programlisting
+
+Чтобы использовать дефис как член класса, переместите его в начало или в конец:
+
+=begin programlisting
+
+    my $interesting_punctuation = qr/[-!?]/;
+
+=end programlisting
+
+E<hellip>или экранируйте его:
+
+=begin programlisting
+
+    my $line_characters = qr/[|=\-_]/;
+
+=end programlisting
+
+X<C<^>; negation of character class regex metacharacter>
+
+Используйте символ каре (C<^>) как первый элемент класса символов, чтобы сказать
+E<laquo>любые символы I<кроме> этихE<raquo>:
+
+=begin programlisting
+
+    my $not_an_ascii_vowel = qr/[^aeiou]/;
+
+=end programlisting
+
+=begin tip Метасимволы в классах символов
+
+Используйте символ каре в любом месте, кроме первой позиции, чтобы сделать его
+членом класса символов. Чтобы включить в класс символов дефис, поместите его
+после знака вставки, или в конце класса, или экранируйте его.
+
+=end tip
+
+=head1 Захват
+
+Z<regex_captures>
+
+Регулярные выражения позволяют вам группировать и захватывать части совпадения
+для дальнейшего использования. Извлечь из строки американский телефонный номер
+вида C<(202) 456-1111> можно следующим образом:
+
+=begin programlisting
+
+    my $area_code    = qr/\(\d{3}\)/;
+    my $local_number = qr/\d{3}-?\d{4}/;
+    my $phone_number = qr/$area_code\s?$local_number/;
+
+=end programlisting
+
+Обратите особое внимание на экранирование круглых скобок в C<$area_code>. Скобки
+имеют особое значение для регулярных выражений Perl 5. Они группируют атомы в
+единицы большего размера, а также захватывают части сопоставленных строк. Для поиска
+литеральных скобок, экранируйте их с помощью обратных слешей, как сделано в
+C<$area_code>.
+
+=head2 Именованные захваты
+
+Z<named_captures>
+X<regex; captures>
+X<regex; named captures>
+X<<< C<< (?<>) >>; regex named capture >>>
+
+В Perl 5.10 были добавлены I<именованные захваты>, которые позволяют вам
+захватывать части совпадения при применении регулярного выражения и получать к
+ним доступ позже, как например при нахождении телефонного номера в строке,
+содержащей контактную информацию:
+
+=begin programlisting
+
+    if ($contact_info =~ /(?<phone>$phone_number)/)
+    {
+        say "Found a number $+{phone}";
+    }
+
+=end programlisting
+
+Регулярные выражения имеют тенденцию выглядеть как пунктуационный суп, пока вы
+не соберёте разные части вместе, как кусочки. Синтаксис именованного захвата
+имеет следующий вид:
+
+=begin programlisting
+
+    (?<capture name> ... )
+
+=end programlisting
+
+X<C<%+>>
+X<global variables; C<%+>>
+
+Скобки окружают захват. Конструкция C<< ?< name > >> именует этот конкретный
+захват, и должна следовать сразу же за левой скобкой. Оставшаяся часть захвата
+E<mdash> регулярное выражение.
+
+Когда будет найдено соответствие заключённому в конструкцию шаблону, Perl
+сохранит совпадающую с шаблоном часть строки в магическую переменную C<%+>. В
+этом хеше ключ E<mdash> это имя захвата, а значение E<mdash> соответствующая
+часть найденной строки.
+
+=head2 Нумерованные захваты
+
+X<regex; numbered captures>
+X<regex; captures>
+
+С давних пор Perl поддерживает I<нумерованные захваты>:
+
+=begin programlisting
+
+    if ($contact_info =~ /($phone_number)/)
+    {
+        say "Found a number $1";
+    }
+
+=end programlisting
+
+X<regex; C<$1>>
+X<regex; C<$2>>
+X<C<$1>; regex metacharacter>
+X<C<$2>; regex metacharacter>
+
+Эта форма захвата не предоставляет идентифицирующего имени и не сохраняет в
+C<%+>. Вместо этого, Perl сохраняет захваченную подстроку в последовательности магических
+переменных. I<Первый> найденный захват попадает в C<$1>, второй E<mdash> в C<$2>
+и так далее. Подсчёт захватов начинается с I<открывающей> скобки захвата; так
+что первая левая скобка начинает захват в C<$1>, вторая E<mdash> в C<$2> и т. д.
+
+Хотя синтаксис именованных захватов длиннее, чем нумерованных, он предоставляет
+дополнительную ясность. Подсчёт левых скобок E<mdash> утомительный труд, и
+объединение регулярных выражений, содержащих нумерованные захваты, слишком
+сложно. Именованные захваты улучшают поддерживаемость регулярных выражений
+E<mdash> хотя коллизии имён возможны, они относительно редки. Минимизируйте риск
+путём использования нумерованных захватов только в регулярных выражениях
+верхнего уровня.
+
+В списочном контексте сопоставление регулярному выражению возвращает список
+захваченных подстрок:
+
+=begin programlisting
+
+    if (my ($number) = $contact_info =~ /($phone_number)/)
+    {
+        say "Found a number $number";
+    }
+
+=end programlisting
+
+Нумерованные захваты также полезны в простых заменах, где именованные захваты
+могут быть слишком громоздкими:
+
+=begin programlisting
+
+    my $order = 'Vegan brownies!';
+
+    $order =~ s/Vegan (\w+)/Vegetarian $1/;
+    # или
+    $order =~ s/Vegan (?<food>\w+)/Vegetarian $+{food}/;
+
+=end programlisting
+
+=head1 Группировка и выбор
+
+Все предыдущие примеры применяли квантификаторы к простым атомам. Вы можете
+применять их к любому элементу регулярного выражения:
+
+=begin programlisting
+
+    my $pork  = qr/pork/;
+    my $beans = qr/beans/;
+
+    like( 'pork and beans', qr/\A$pork?.*?$beans/,
+         'maybe pork, definitely beans' );
+
+=end programlisting
+
+Если вы расширите регулярное выражение вручную, результат может вас удивить:
+
+=begin programlisting
+
+    my $pork_and_beans = qr/\Apork?.*beans/;
+
+    like( 'pork and beans', qr/$pork_and_beans/,
+        'maybe pork, definitely beans' );
+    like( 'por and beans', qr/$pork_and_beans/,
+         'wait... no phylloquinone here!' );
+
+=end programlisting
+
+Иногда определённость помогает аккуратности шаблона:
+
+=begin programlisting
+
+    my $pork  = qr/pork/;
+    my $and   = qr/and/;
+    my $beans = qr/beans/;
+
+    like( 'pork and beans', qr/\A$pork? $and? $beans/,
+        'maybe pork, maybe and, definitely beans' );
+
+=end programlisting
+
+X<regex; alternation>
+X<C<|>; alternation regex metacharacter>
+
+Некоторым регулярным выражениям нужно сопоставить одному варианту или
+другому. Метасимвол I<выбора> (C<|>) выражает это намерение:
+
+=begin programlisting
+
+    my $rice  = qr/rice/;
+    my $beans = qr/beans/;
+
+    like( 'rice',  qr/$rice|$beans/, 'Found rice'  );
+    like( 'beans', qr/$rice|$beans/, 'Found beans' );
+
+=end programlisting
+
+Метасимвол выбора указывает, что любой из предшествующих фрагментов может быть
+сопоставлен. Имейте ввиду, что выбор имеет приоритет (L<precedence>) даже ниже, чем
+атомы:
+
+=begin programlisting
+
+    like(   'rice',  qr/rice|beans/, 'Found rice'   );
+    like(   'beans', qr/rice|beans/, 'Found beans'  );
+    unlike( 'ricb',  qr/rice|beans/, 'Found hybrid' );
+
+=end programlisting
+
+Хотя легко воспринять C<rice|beans> как C<ric>, за которым следует либо C<e>,
+либо C<b>, и далее C<eans>, выбор всегда включает I<весь> фрагмент до ближайшего
+ограничителя регулярного выражения, будь это начало или конце шаблона, круглые
+скобки, другой символ выбора или квадратная скобка.
+
+X<regex; C<()>>
+X<C<()>; capturing regex metacharacters>
+
+Чтобы уменьшить путаницу, используйте именованные фрагменты в переменных
+(C<$rice|$beans>) или группируйте альтернативные варианты в I<незахватывающие
+группы>:
+
+=begin programlisting
+
+    my $starches = qr/(?:pasta|potatoes|rice)/;
+
+=end programlisting
+
+X<C<(?:)>; non-capturing regex group>
+
+Последовательность C<(?:)> группирует серию атомов, не осуществляя захват.
+
+=begin tip Не захватываемое для вашей защиты
+
+Преобразованное в строку регулярное выражение включает окружающую его
+незахватывающую группировку; C<qr/rice|beans/> преобразуется в
+C<(?^u:rice|beans)>.
+
+=end tip
+
+=head1 Другие экранированные последовательности
+
+X<C<\>; regex escaping metacharacter>
+X<escaping>
+X<regex; escaping metacharacters>
+
+Для поиска I<литерального> экземпляра метасимвола, I<экранируйте> его с помощью
+обратного слеша (C<\>). Вы встречали это раньше, где C<\(> обозначало одну
+левую круглую скобку, а C<\]> E<mdash> одну правую квадратную скобку. C<\.>
+обозначает литеральный символ точки вместо атома, захватывающего что угодно,
+кроме символа перевода строки.
+
+Вам, вероятно, понадобится экранировать метасимвол выбора (C<|>), так же как
+метасимвол конца строки (C<$>) и квантификаторы  (C<+>, C<?>, C<*>).
+
+X<C<\Q>; disable metacharacters regex metacharacter>
+X<C<\E>; reenable metacharacters regex metacharacter>
+X<regex; disabling metacharacters>
+
+I<Символы отключения метасимволов> (C<\Q> and C<\E>) отключают интерпретацию
+метасимволов в своих границах. Это особенно полезно при получении текста для
+сопоставления из источника, который вы не контролируете при написании
+программы:
+
+=begin programlisting
+
+    my ($text, $literal_text) = @_;
+
+    return $text =~ /\Q$literal_text\E/;
+
+=end programlisting
+
+Аргумент C<$literal_text> может содержать всё что угодно E<mdash> например,
+строку C<** ALERT **>. С фрагментом, заключённым в C<\Q> и C<\E>, Perl воспримет
+регулярное выражение как C<\*\* ALERT \*\*> и попытается найти соответствие
+литеральным символам звёздочки, а не жадным квантификаторам.
+
+=begin tip Безопасность регулярных выражений
+
+Будьте осторожны при обработке регулярных выражений из недоверенного
+пользовательского ввода. Злонамеренный мастер регулярных выражений может
+провести DOS-атаку (denial-of-service) на вашу программу.
+
+=end tip
+
+=head1 Проверки
+
+X<regex; assertions>
+
+Якоря регулярных выражений, такие как C<\A>, C<\b>, C<\B> и C<\Z> E<mdash> форма
+I<проверок регулярных выражений>, которые требуют, чтобы строка удовлетворяла
+определённым условиям. Эти проверки не сопоставляются отдельным символам
+строки. Независимо от того, что содержит строка, регулярное выражение C<qr/\A/>
+I<всегда> будет совпадать.
+
+X<regex; zero-width assertion>
+
+I<Проверки нулевой ширины> соответствуют I<шаблону>. Что ещё более важно, они
+при этом не потребляют часть шаблона, которой сопоставляются. Например, чтобы
+найти кота самого по себе, вы можете использовать проверку границы слова:
+
+=begin programlisting
+
+    my $just_a_cat = qr/cat\b/;
+
+=end programlisting
+
+X<regex; zero-width negative look-ahead assertion>
+X<C<(?!...)>; zero-width negative look-ahead regex assertion>
+
+E<hellip>но если хотите найти животное, не вызывающее бедствий, вы можете
+использовать I<проверку нулевой ширины отрицательного заглядывания вперёд>:
+
+=begin programlisting
+
+    my $safe_feline = qr/cat(?!astrophe)/;
+
+=end programlisting
+
+Конструкция C<(?!...)> соответствует фразе C<cat>, только если сразу за ней
+не следует фраза C<astrophe>.
+
+X<regex; zero-width positive look-ahead assertion>
+X<C<(?=...)>; zero-width positive look-ahead regex assertion>
+
+I<Проверка нулевой ширины положительного заглядывания вперёд>:
+
+=begin programlisting
+
+    my $disastrous_feline = qr/cat(?=astrophe)/;
+
+=end programlisting
+
+E<hellip>соответствует фразе C<cat>, только если сразу за ней следует фраза
+C<astrophe>. Хотя того же самого можно добиться с помощью обычного регулярного
+выражения, рассмотрите регулярное выражение для поиска всех некатастрофических
+слов в словаре, начинающихся с C<cat>:
+
+=begin programlisting
+
+    my $disastrous_feline = qr/cat(?!astrophe)/;
+
+    while (<$words>)
+    {
+        chomp;
+        next unless /\A(?<cat>$disastrous_feline.*)\Z/;
+        say "Found a non-catastrophe '$+{cat}'";
+    }
+
+=end programlisting
+
+Утверждение нулевой ширины не потребляет ничего из исходной строки, оставляя
+для сопоставления фрагмент с якорем C<.*\Z>. В противном случае захват захватил
+бы только часть C<cat> из исходной строки.
+
+X<C<(?<!...)>; zero-width negative look-behind regex assertion>
+X<C<(?<=...)>; zero-width positive look-behind regex assertion>
+X<regex; zero-width positive look-behind assertion>
+X<regex; zero-width negative look-behind assertion>
+
+Чтобы проверить, что ваше животное никогда не появляется в начале строки, вы
+можете использовать I<утверждение нулевой ширины отрицательного заглядывания
+назад>. Эти проверки должны иметь фиксированный размер; вы не можете
+использовать квантификаторы:
+
+=begin programlisting
+
+    my $middle_cat = qr/(?<!\A)cat/;
+
+=end programlisting
+
+Конструкция C<< (?<!...) >> содержит шаблон фиксированной ширины. Также вы
+можете выразить, что C<cat> всегда появляется сразу после символа пробела, с
+помощью I<утверждения нулевой ширины положительного заглядывания назад>:
+
+=begin programlisting
+
+    my $space_cat = qr/(?<=\s)cat/;
+
+=end programlisting
+
+Конструкция C<< (?<=...) >> содержит шаблон фиксированной ширины. Этот подход
+может быть полезен при объединении глобального сопоставления регулярному
+выражению с модификатором C<\G>, но это продвинутая возможность, которую вы,
+вероятно, не будете использовать часто.
+
+X<C<\K>; keep regex assertion>
+X<regex; keep assertion>
+
+Новейшая возможность регулярных выражений Perl 5 E<mdash> проверка
+I<сохранения> C<\K>. Это проверка нулевой ширины положительного заглядывания
+назад I<может> иметь переменную длину:
+
+=begin programlisting
+
+    my $spacey_cat = qr/\s+\Kcat/;
+
+    like( 'my cat has been to space', $spacey_cat );
+    like( 'my  cat  has  been  to  doublespace',
+         $spacey_cat );
+
+=end programlisting
+
+C<\K> на удивление полезна для некоторых замен, которые удаляют конец шаблона:
+
+=begin programlisting
+
+    my $exclamation = 'This is a catastrophe!';
+    $exclamation    =~ s/cat\K\w+!/./;
+
+    like( $exclamation, qr/\bcat\./,
+                          "That wasn't so bad!" );
+
+=end programlisting
+
+=head1 Модификаторы регулярных выражений
+
+X<regex; modifiers>
+X<regex; C</i> modifier>
+X<C</i>; case-insensitive regex modifier>
+X<regex; case-insensitive>
+
+Некоторые модификаторы изменяют поведение операторов регулярных выражений. Эти
+модификаторы располагаются на конце операторов сопоставления, замены или
+C<qr//>. Например, так можно включить регистронезависимое сопоставление:
+
+=begin programlisting
+
+    my $pet = 'CaMeLiA';
+
+    like( $pet, qr/Camelia/,  'Nice butterfly!'  );
+    like( $pet, qr/Camelia/i, 'shift key br0ken' );
+
+=end programlisting
+
+Первый C<like()> провалится, потому что строка содержит другие буквы. Второй
+C<like()> будет успешен, потому что модификатор C</i> заставляет регулярное выражение
+игнорировать различия в регистре. C<M> и C<m> во втором регулярном выражении
+эквивалентны, благодаря модификатору.
+
+X<regex; embedded modifiers>
+
+Также вы можете включать модификаторы в шаблон:
+
+=begin programlisting
+
+    my $find_a_cat = qr/(?<feline>(?i)cat)/;
+
+=end programlisting
+
+Синтаксис C<(?i)> включает регистронезависимый поиск только внутри включающей
+его группы: в данном случае, в именованном захвате. Вы можете использовать
+несколько модификаторов в этой форме. Отключите определённые модификаторы,
+предварив их знаком минуса (C<->):
+
+=begin programlisting
+
+    my $find_a_rational = qr/(?<number>(?-i)Rat)/;
+
+=end programlisting
+
+X<C</m>; multiline regex modifier>
+X<regex; C</m> modifier>
+X<regex; multiline>
+X<C<\A>; start of line regex metacharacter>
+X<C<\Z>; end of line regex metacharacter>
+
+Многострочный оператор, C</m>, позволяет якорям C<\A> и C<\Z> соответствовать
+любому переводу строки, входящему в строку.
+
+X<C</s>; single line regex modifier>
+X<regex; C</s> modifier>
+X<regex; single line>
+
+Модификатор C</s> воспринимает исходную строку как единую строку, так что
+метасимвол C<.> будет соответствовать в том числе символу перевода строки.
+Демьен Конвей (Damian Conway) предлагает мнемонику: C</m> модифицирует поведение
+I<нескольких> (I<multiple>) метасимволов регулярного выражения, а C</s>
+модифицирует поведение I<одного> (I<single>) метасимвола.
+
+X<C</r>; non-destructive substitution modifier>
+X<regex; C</r> modifier>
+X<regex; non-destructive substitution>
+
+Модификатор C</r> заставляет операцию замены возвращать результат замены,
+оставляя исходную строку как есть. Если замена успешна, результатом будет
+модифицированная копия оригинала. Если замена проваливается (потому что шаблон
+не соответствует), результатом будет немодифицированная копия оригинала:
+
+=begin programlisting
+
+    my $status     = 'I am hungry for pie.';
+    my $newstatus  = $status =~ s/pie/cake/r;
+    my $statuscopy = $status
+                   =~ s/liver and onions/bratwurst/r;
+
+    is( $status, 'I am hungry for pie.',
+        'original string should be unmodified' );
+
+    like( $newstatus,    qr/cake/,      'cake wanted' );
+    unlike( $statuscopy, qr/bratwurst/, 'wurst not'   );
+
+=end programlisting
+
+X<C</x>; extended readability regex modifier>
+X<regex; C</x> modifier>
+X<regex; extended readability>
+
+Модификатор C</x> позволяет вам включать в шаблон дополнительные пробельные
+символы и комментарии. При использовании этого модификатора, механизм регулярных
+выражений игнорирует пробельные символы и комментарии. Результат зачастую
+получается намного более читабельный:
+
+=begin programlisting
+
+    my $attr_re = qr{
+        \A                    # начало строки
+
+        (?:
+          [;\n\s]*            # пробелы и двоеточия
+          (?:/\*.*?\*/)?      # комментарии в стиле C
+        )*
+
+        ATTR
+
+        \s+
+        (   U?INTVAL
+          | FLOATVAL
+          | STRING\s+\*
+        )
+    }x;
+
+=end programlisting
+
+Это регулярное выражение не I<простое>, но комментарии и пробельные символы
+улучшают его читабельность. Даже если вы составляете регулярные выражения из
+компилированных фрагментов, модификатор C</x> всё ещё может улучшить ваш код.
+
+X<C</g>; global match regex modifier>
+X<regex; global match>
+X<regex; C</g> modifier>
+
+Модификатор C</g> проверяет соответствие регулярному выражению глобально по
+всей строке. Это имеет смысл при использовании в замене:
+
+=begin programlisting
+
+    # успокоить Mitchell estate
+    my $contents = slurp( $file );
+    $contents    =~ s/Scarlett O'Hara/Mauve Midway/g;
+
+=end programlisting
+
+X<C<\G>; global match anchor regex metacharacter>
+X<regex; C<\G>>
+X<regex; global match anchor>
+
+При использовании с сопоставлением E<mdash> не заменой E<mdash> метасимвол
+C<\G> позволяет вам обработать строку в цикле по одному куску за раз. C<\G>
+соответствует позиции, на которой завершилось самое последнее соответствие.
+Чтобы обработать плохо закодированный файл, полный американских телефонных
+номеров в логических кусках, вы можете написать:
+
+=begin programlisting
+
+    while ($contents =~ /\G(\w{3})(\w{3})(\w{4})/g)
+    {
+        push @numbers, "($1) $2-$3";
+    }
+
+=end programlisting
+
+Имейте ввиду, что якорь C<\G> будет занимать последнюю точку в строке, где
+произошла предыдущаю итерация совпадения. Если предыдущее совпадение закончилось
+жадным совпадением, таким как C<.*>, следующее соответствие будет иметь меньше
+доступной строки для сопоставления. Проверки заглядывания вперёд тоже могут
+помочь.
+
+X<C</e>; substitution evaluation regex modifier>
+X<regex; C</e> modifier>
+X<regex; substitution evaluation>
+
+Модификатор C</e> позволяет вам писать произвольный код Perl 5 на правой
+стороне операции замены. Если сопоставление будет успешным, механизм регулярных
+выражений выполнит код и использует возвращаемое им значение как значение для
+замены. Приведённый ранее пример глобальной замены может быть выполнен проще с
+помощью такого кода:
+
+=begin programlisting
+
+    # успокоить Mitchell estate
+    $sequel  =~ s{Scarlett( O'Hara)?}
+                 {
+                    'Mauve' . defined $1
+                            ? ' Midway'
+                            : ''
+                 }ge;
+
+=end programlisting
+
+Каждое дополнительное вхождение модификатора C</e> будет приводить к ещё одному
+вычислению результата выражения, хотя только Perl-гольферы используют что-нибудь
+дальше C</ee>.

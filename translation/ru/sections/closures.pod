@@ -1,30 +1,26 @@
-=encoding utf-8
-
-=head1 Замыкания
+=head1 Closures
 
 Z<closures>
 X<functions; higher order>
 X<higher order functions>
 
-Каждый раз, когда поток управления входит в функцию, эта функцию получает новое
-окружение, представляющее лексическую область видимости (L<scope>) этого вызова.
-Это в той же мере применимо и к анонимным функциям (L<anonymous_functions>).
-Следствия этого очень значимы. Термин компьютерных наук I<функции высшего
-порядка> ссылается на функции, манипулирующие другими функциями. Замыкания
-E<mdash> пример этой значимости.
+Every time control flow enters a function, that function gets a new environment
+representing that invocation's lexical scope (L<scope>). That applies equally
+well to anonymous functions (L<anonymous_functions>). The implication is
+powerful. The computer science term I<higher order functions> refers to
+functions which manipulate other functions. Closures show off this power.
 
-=head2 Создание замыканий
+=head2 Creating Closures
 
 X<closures>
 X<functions; closures>
 
-I<Замыкание> E<mdash> это функция, использующая лексические переменные из
-внешней области видимости. Вы, вероятно, уже создавали и использовали замыкания,
-не осознавая этого:
+A I<closure> is a function that uses lexical variables from an outer scope.
+You've probably already created and used closures without realizing it:
 
 =begin programlisting
 
-    package Invisible::Closure;
+    use Modern::Perl '2014';
 
     my $filename = shift @ARGV;
 
@@ -32,14 +28,13 @@ I<Замыкание> E<mdash> это функция, использующая �
 
 =end programlisting
 
-Если этот код выглядит для вас очевидным, отлично! I<Конечно> функция
-C<get_filename()> может видеть лексическую переменную C<$filename>. Именно так
-работают области видимости!
+If this code seems straightforward to you, good! I<Of course> the
+C<get_filename()> function can see the C<$filename> lexical. That's how scope
+works!
 
-Предположим, вы хотите пройти в цикле по списку элементов без необходимости
-самостоятельно управлять итератором. Вы можете создать функцию, которая
-возвращает функцию, которая, будучи вызванной, вернёт следующий элемент в
-итерации:
+Suppose you want to iterate over a list of items without managing the iterator
+yourself. You can create a function which returns a function that, when
+invoked, will return the next item in the iteration:
 
 =begin programlisting
 
@@ -55,40 +50,40 @@ C<get_filename()> может видеть лексическую перемен�
         }
     }
 
-    my $cousins = make_iterator(
-        qw( Rick Alex Kaycee Eric Corey Mandy Christine )
-    );
+    my $cousins = make_iterator(qw(
+        Rick Alex Kaycee Eric Corey Mandy Christine Alex
+    ));
 
-    say $cousins->() for 1 .. 5;
+    say $cousins->() for 1 .. 6;
 
 =end programlisting
 
-Хотя и произошёл возврат из C<make_iterator()>, анонимная функция, сохранённая в
-C<$cousins>, замкнула значения этих переменных как они существовали внутри
-вызова C<make_iterator()>. Их значения продолжают существовать
+Even though C<make_iterator()> has returned, the anonymous function stored in
+C<$cousins> has closed over the values of these variables I<as they existed
+within> the invocation of C<make_iterator()>. Their values persist
 (L<reference_counts>).
 
-Так как каждый вызов C<make_iterator()> создаёт отдельное лексическое окружение,
-анонимная функция, которую она создаёт и возвращает, замыкается на уникальном
-лексическом окружении:
+Because invoking C<make_iterator()> creates a separate lexical environment, the
+anonymous sub it creates and returns closes over a unique lexical environment
+for each invocation:
 
 =begin programlisting
 
-    my $aunts = make_iterator(
-        qw( Carole Phyllis Wendy Sylvia Monica Lupe )
-    );
+    my $aunts = make_iterator(qw(
+        Carole Phyllis Wendy Sylvia Monica Lupe
+    ));
 
     say $cousins->();
     say $aunts->();
 
 =end programlisting
 
-Так как C<make_iterator()> не возвращает эти лексические переменные по значению
-или по ссылке, никакой другой Perl-код, кроме замыкания, не сможет получить к
-ним доступ. Они инкапсулированы так же эффективно, как любая другая лексическая
-инкапсуляция, хотя любой код, разделяющий лексическое окружение, может получить
-доступ к этим значениями. Эта идиома предоставляет лучшую инкапсуляцию того, что
-в ином случае было бы глобальной переменной файла или пакета:
+Because C<make_iterator()> does not return these lexicals by value or by
+reference, no other Perl code besides the closure can access them. They're
+encapsulated as effectively as any other lexical is, although any code which
+shares a lexical environment can access these values. This idiom provides
+better encapsulation of what would otherwise be a file or package global
+variable:
 
 =begin programlisting
 
@@ -101,31 +96,28 @@ C<$cousins>, замкнула значения этих переменных к�
 
 =end programlisting
 
-Имейте ввиду, что вы не можете I<вкладывать> именованные функции. Именованные
-функции имеют глобальную область видимости пакета. Любые лексические переменные,
-разделяемые между вложенными функциями, перестанут быть разделяемыми, как только
-внешняя функция уничтожит своё первое лексическое окружениеN<Если это приводит
-вас в замешательство, представьте реализацию.>.
+Be aware that you cannot I<nest> named functions. Named functions have package
+global scope. Any lexical variables shared between nested functions will go
+unshared when the outer function destroys its first lexical environmentN<If
+that's confusing to you, imagine the implementation.>.
 
-=begin tip Вторжение в частную жизнь
+=begin tip Invasion of Privacy
 
 X<CPAN; C<PadWalker>>
 
-CPAN-модуль C<PadWalker> позволяет вам нарушать лексическую инкапсуляцию, но
-любой, кто использовал его и сломал ваш код, заслуживает права исправить любые
-сопутствующие баги без вашей помощи.
+The CPAN module C<PadWalker> lets you violate lexical encapsulation, but anyone
+who uses it gets to fix any bugs that result.
 
 =end tip
 
-=head2 Использование замыканий
+=head2 Uses of Closures
 
-Итерирование по списку постоянного размера с помощью замыкания E<mdash>
-интересный пример, но замыкания могут делать гораздо больше, как, например,
-итерирование по списку, который слишком дорог для вычисления или слишком велик,
-чтобы держать его в памяти целиком. Рассмотрим функцию, создающую
-последовательность чисел Фибоначчи по мере того, как вам понадобятся её
-элементы. Вместо повторного вычисления последовательности рекурсивно,
-используйте кеш и ленивое создание требуемых элементов:
+Iterating over a fixed-sized list with a closure is interesting, but closures
+can do much more, such as iterating over a list which is too expensive to
+calculate or too large to maintain in memory all at once. Consider a function
+to create the Fibonacci series as you need its elementsN<Why? To check your
+Haskell homework.>. Instead of recalculating the series recursively, use a
+cache and lazily create the elements you need:
 
 =begin programlisting
 
@@ -149,17 +141,21 @@ CPAN-модуль C<PadWalker> позволяет вам нарушать лек
         }
     }
 
+    # calculate 42nd Fibonacci number
+    my $fib = gen_fib();
+    say $fib->( 42 );
+
 =end programlisting
 
-Каждый вызов функции, возвращаемой C<get_fib()>, принимает один аргумент,
-I<n>-ный элемент последовательности Фибоначчи. Функция генерирует все
-предшествующие значения в последовательности по мере необходимости, кеширует их
-и возвращает запрошенный элемент E<mdash> и даже откладывает вычисление до
-абсолютной необходимости. Однако здесь шаблон, характерный для кеширования,
-переплетается с числовыми последовательностями. Что получится, если вы
-выделите связанный с кешированием код (инициализация кеша, выполнение нужного
-кода для заполнения элементов кеша и возврат вычисленного или полученного из
-кеша значения) в функцию C<generate_caching_closure()>?
+Every call to the function returned by C<gen_fib()> takes one argument, the
+I<n>th element of the Fibonacci series. The function generates and caches all
+preceding values in the series as necessary, and returns the requested element.
+
+Here's where closures and first class functions get interesting. This code does
+two things; there's a pattern specific to caching intertwined with the numeric
+series. What happens if you extract the cache-specific code (initialize a
+cache, execute custom code to populate cache elements, and return the
+calculated or cached value) to a function C<gen_caching_closure()>?
 
 =begin programlisting
 
@@ -178,25 +174,11 @@ I<n>-ный элемент последовательности Фибоначч
         };
     }
 
-=end programlisting
-
-=begin tip Обернуть, применить и отфильтровать
-
-Встроенные функции C<map>, C<grep> и C<sort> сами по себе E<mdash> функции
-высшего порядка.
-
-=end tip
-
-Теперь C<gen_fib()> превращается в:
-
-=begin programlisting
-
     sub gen_fib
     {
         my @fibs = (0, 1, 1);
 
-        return gen_caching_closure(
-            sub
+        return B<gen_caching_closure>( sub
             {
                 my ($item, $fibs) = @_;
 
@@ -205,54 +187,57 @@ I<n>-ный элемент последовательности Фибоначч
                     $fibs->[$calc] = $fibs->[$calc - 2]
                                    + $fibs->[$calc - 1];
                 }
-            },
-            @fibs
+            }B<, @fibs>
         );
     }
 
 =end programlisting
 
-Программа ведёт себя так же, как и раньше, но использование ссылок на функции и
-замыканий отделяет инициализирующее кеш поведение от вычисления следующего числа
-последовательности Фибоначчи. Кастомизация поведения кода E<mdash> в данном
-случае C<get_caching_closure()> E<mdash> с помощью передачи функции обеспечивает
-потрясающую гибкость.
+The program behaves as it did before, but now function references and closures
+separate the cache initialization behavior from the calculation of the next
+number in the Fibonacci series. Customizing the behavior of code--in this case,
+C<gen_caching_closure()>--by passing in a function allows tremendous
+flexibility and can clean up your code.
 
-=head2 Замыкания и частичное применение
+=begin tip Fold, Apply, and Filter
+
+The builtins C<map>, C<grep>, and C<sort> are themselves higher-order
+functions.
+
+=end tip
+
+=head2 Closures and Partial Application
 
 Z<partial_application>
 
-Также замыкания могут I<удалить> нежелательную универсальность. Рассмотрим
-случай функции, принимающей несколько параметров:
+Closures can also I<remove> unwanted genericity. Consider the case of a
+function which takes several parameters:
 
 =begin programlisting
 
     sub make_sundae
     {
-        my %args = @_;
+        my %args      = @_;
 
         my $ice_cream = get_ice_cream( $args{ice_cream} );
-        my $banana    = get_banana( $args{banana} );
-        my $syrup     = get_syrup( $args{syrup} );
+        my $banana    = get_banana(    $args{banana}    );
+        my $syrup     = get_syrup(     $args{syrup}     );
         ...
     }
 
 =end programlisting
 
-Мириады возможностей кастомизации могут быть очень полезны в полноценном
-магазине мороженого, но в случае передвижного фургончика с мороженым, в котором
-подают только мороженое Французская ваниль на бананах Кавендиш, каждый вызов
-C<make_sundae()> требует передачи аргументов, которые никогда не изменяются.
+Myriad customization possibilities might work very well in a full-sized ice
+cream store, but for a drive-through ice cream cart where you only serve French
+vanilla ice cream on Cavendish bananas, every call to C<make_sundae()> passes
+arguments that never change.
 
 X<partial application>
 
-Техника, называемая I<частичное применение>, позволяет вам привязать
-I<некоторые> из аргументов к функции, а остальные предоставлять позже. Оберните
-функцию, которую намереваетесь вызывать, в замыкание, и передайте связанные
-аргументы.
-
-Рассмотрим фургончик с мороженым, продающий только мороженое Французская ваниль
-на бананах Кавендиш:
+I<Partial application> allows you to bind I<some> of the arguments to a
+function now so that you can provide the others later. Wrap the function you
+intend to call in a closure and pass the bound arguments. For your ice cream
+cart:
 
 =begin programlisting
 
@@ -268,15 +253,15 @@ I<некоторые> из аргументов к функции, а остал
 
 X<CPAN; C<Sub::Install>>
 
-Вместо вызова C<make_sundae()> напрямую, вызовите ссылку на функцию в
-C<$make_cart_sundae> и передайте только нужные аргументы, не опасаясь позабыть о
-неизменяющихся или передать их некорректноN<Вы можете даже использовать
-C<Sub::Install> из CPAN для импорта этой функции напрямую в другое пространство
-имён.>.
+Now whenever you process an order, invoke the function reference in
+C<$make_cart_sundae> and pass only the interesting arguments. You'll never
+forget the invariants or pass them incorrectly. You can even use
+C<Sub::Install> from the CPAN to import C<$make_cart_sundae> function into
+another namespace.
 
 X<I<Higher Order Perl>>
 
-Это только начало того, что вы можете делать с функиями высшего порядка.
-I<Higher Order Perl> Марка Джейсона Доминуса (Mark Jason Dominus) E<mdash>
-канонический справочник по функциям первого класса и замыканиям в Perl. Вы
-можете прочитать его онлайн по адресу U<http://hop.perl.plover.com/>.
+This is only the start of what you can do with higher order functions. Mark
+Jason Dominus's I<Higher Order Perl> is the canonical reference on first-class
+functions and closures in Perl. Read it online at
+U<http://hop.perl.plover.com/>.

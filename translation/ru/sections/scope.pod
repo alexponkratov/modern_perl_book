@@ -1,63 +1,59 @@
-=encoding utf-8
-
-=head1 Область видимости
+=head1 Scope
 
 Z<scope>
 
 X<scope>
 X<encapsulation>
 
-I<Область видимости> в Perl обозначает продолжительность жизни и видимость
-именованных сущностей. В Perl всё, что имеет имя (переменная, функция), имеет
-область видимости. Ограничение области видимости помогает усилить
-I<инкапсуляцию> E<mdash> сохранение связанных понятий вместе и предотвращение их
-вытекания наружу.
+I<Scope> in Perl refers to the lifespan and visibility of named entities.
+Everything with a name in Perl (a variable, a function, a filehandle, a class)
+has a scope. Scoping helps to enforce I<encapsulation>--keeping related
+concepts together and preventing their details from leaking.
 
-=head2 Лексическая область видимости
+=head2 Lexical Scope
 
 Z<lexical_scope>
 
 X<lexical scope>
 X<scope; lexical>
 
-I<Лексическая область видимости> E<mdash> это область видимости, видимая по ходу
-I<чтения> программы. Компилятор Perl определяет эту область видимости во время
-компиляции. Блок, ограниченный фигурными скобками, создаёт новую область
-видимости, будь это голый блок, блок конструкции цикла, блок объявления C<sub>,
-блок C<eval> или любой другой блок, не заключающий в кавычки.
+I<Lexical scope> is the scope visible to you as you I<read> a program.  A block
+delimited by curly braces creates a new scope, whether a bare block, the block
+of a loop construct, the block of a C<sub> declaration, an C<eval> block, a
+C<package> block, or any other non-quoting block. The Perl compiler resolves
+this scope during compilation.
 
 X<variables; lexical>
 
-Лексическая область видимости определяет видимость переменных, объявленных с
-помощью C<my> E<mdash> I<лексических> переменных. Лексическая переменная,
-объявленная в одной области видимости, видима в этой области видимости и любых
-областях видимости, вложенных в неё, но невидима в областях видимости,
-находящихся на том же уровне вложенности или выше:
+Lexical scope describes the visibility of variables declared with
+C<my>--I<lexical> variables. A lexical variable declared in one scope is
+visible in that scope and any scopes nested within it, but is invisible to
+sibling or outer scopes:
 
 =begin programlisting
 
-    # внешняя лексическая область видимости
+    # outer lexical scope
     {
         package Robot::Butler
 
-        # внутренняя лексическая область видимости
+        # inner lexical scope
         my $battery_level;
 
         sub tidy_room
         {
-            # более глубокая вложенная область видимости
+            # further inner lexical scope
             my $timer;
 
             do {
-                # самая глубокая лексическая область видимости
+                # innermost lexical scope
                 my $dustpan;
                 ...
             } while (@_);
 
-            # лексическая область видимости, находящаяся на том же уровне
+            # sibling inner lexical scope
             for (@_)
             {
-                # отдельная самая глубокая лексическая область видимости
+                # separate innermost scope
                 my $polish_cloth;
                 ...
             }
@@ -66,17 +62,17 @@ X<variables; lexical>
 
 =end programlisting
 
-E<hellip>переменная C<$battery_level> видима во всех четырёх областях видимости.
-C<$timer> видима в методе, блоке C<do> и цикле C<for>. C<$dustpan> видима только
-в блоке C<do>, а C<$polish_cloth> E<mdash> только в цикле C<for>.
+... C<$battery_level> is visible in all four scopes. C<$timer> is visible in
+the method, the C<do> block, and the C<for> loop.  C<$dustpan> is visible only
+in the C<do> block and C<$polish_cloth> within the C<for> loop.
 
 X<lexical shadowing>
 X<scope; lexical shadowing>
 
-Объявление во внутренней области видимости лексической переменной с тем же
-именем, что и лексическая переменная во внешней области видимости, скрывает, или
-I<затеняет>, внешнюю переменную во внутренней области видимости. Зачастую это
-именно то, что вам нужно:
+Declaring a lexical in an inner scope with the same name as a lexical in an
+outer scope hides, or I<shadows>, the outer lexical within the inner scope.
+
+For example:
 
 =begin programlisting
 
@@ -91,22 +87,26 @@ I<затеняет>, внешнюю переменную во внутренне
 
 =end programlisting
 
-=begin tip Конфликты имён
+In longer code with larger scopes, this shadowing behavior is often
+desirable--it's easier to understand code when the scope of a lexical variable
+is no more than a couple of dozen lines.
 
-Лексическое затенение может происходить по случайности. Ограничивайте область
-видимости переменных и вложенность областей видимости для уменьшения риска.
+=begin tip Name Collisions
+
+Lexical shadowing can happen by accident. Limit the scope of variables and the
+nesting of scopes to lessen your risk.
 
 =end tip
 
-Эта программа выводит C<Edward> и затем C<Jacob>N<Члены семьи, а не вампиры.>,
-несмотря на то, что переобъявление лексической переменной с тем же именем и
-типом I<в той же самой лексической области видимости> приводит к
-предупреждающему сообщению. Затенение лексической переменной E<mdash>
-особенность инкапсуляции.
+The silly lexical shadowing example program prints C<Edward> and then
+C<Jacob>N<Family members, not vampires.> because the lexical in the nested
+scope hides the lexical in the outer scope. Shadowing a lexical is a feature of
+encapsulation. Declaring multiple variables with the same name and type I<in
+the same lexical scope> produces a warning message.
 
-Некоторые лексические объявления имеют тонкости, как, например, лексическая
-переменная, используемая как переменная-итератор в цикле C<for>. Её объявление
-находится снаружи блока, но её область видимости E<mdash> I<внутри> блока цикла:
+Some lexical declarations have subtleties, such as a lexical variable used as
+the iterator variable of a C<for> loop. Its declaration comes outside of the
+block, but its scope is that I<within> the loop block:
 
 =begin programlisting
 
@@ -121,60 +121,40 @@ I<затеняет>, внешнюю переменную во внутренне
 
 =end programlisting
 
-X<lexical topic>
-X<topic; lexical>
+Functions--named and anonymous--provide lexical scoping to their bodies. This
+enables closures (L<closures>).
 
-Аналогично, C<given> (L<given_when>) создаёт I<лексический топик> (как C<my $_>)
-внутри своего блока:
-
-=begin programlisting
-
-    $_ = 'outside';
-
-    given ('inner')
-    {
-        say;
-        $_ = 'this assignment does nothing useful';
-    }
-
-    say;
-
-=end programlisting
-
-E<hellip>так что выход из блока восстанавливает предыдущее значение C<$_>.
-
-Функции E<mdash> именованные и анонимные E<mdash> создают лексическую область
-видимости для своих тел. Это помогает созданию замыканий (L<closures>).
-
-=head2 Область видимости our
+=head2 Our Scope
 
 Z<our>
 X<builtins; C<our>>
 X<packages; scope>
 X<scope; packages>
 
-Внутри заданной области видимости можно объявить псевдоним переменной пакета с
-помощью встроенной директивы C<our>. Как и C<my>, C<our> обеспечивает
-лексическую область видимости псевдонима. Полностью определённое имя доступно
-из любого места, но лексический псевдоним виден только внутри своей области
-видимости.
+Within given scope, declare an alias to a package variable with the C<our>
+builtin. Like C<my>, C<our> enforces lexical scoping of the alias. The
+fully-qualified name is available everywhere, but the lexical alias is visible
+only within its scope.
 
-C<our> наиболее полезна в применении к глобальным переменным пакета, таким как
-C<$VERSION> и C<$AUTOLOAD>.
+C<our> is most useful with package global variables like C<$VERSION> and
+C<$AUTOLOAD>. You get a little bit of typo detection (declaring a package
+global with C<our> satisfies the C<strict> pragma's C<vars> rule), but you
+still have to deal with a global variable.
 
-=head2 Динамическая область видимости.
+=head2 Dynamic Scope
 
 Z<dynamic_scope>
 
 X<dynamic scope>
 X<scope; dynamic>
 
-Динамическая область видимости похожа на лексическую область видимости по своим
-правилам видимости, но вместо поиска наружу в области видимости времени
-компиляции, поиск проходит назад через контекст вызова. В то время как
-глобальная переменная пакета может быть I<видима> внутри всех областей
-видимости, её I<значение> изменяется в зависимости от локализации (C<local>) и
-присваивания:
+Dynamic scope resembles lexical scope in its visibility rules, but instead of
+looking outward in compile-time scopes, lookup traverses backwards through all
+of the function calls you've made to reach the current code. Dynamic scope
+applies only to global and package global variables (because lexicals aren't
+visible outside their scopes), and is easiest to understand with an example.
+While a package global variable may be I<visible> within all scopes, its
+I<value> may change depending on C<local>ization and assignment:
 
 =begin programlisting
 
@@ -204,39 +184,36 @@ X<scope; dynamic>
 
 =end programlisting
 
-Программа начинается с объявления C<our>-переменной, C<$scope>, а так же трёх
-функций. Заканчивается она присваиванием C<$scope> и вызовом C<main()>.
+The program begins by declaring an C<our> variable, C<$scope>, as well as three
+functions. It ends by assigning to C<$scope> and calling C<main()>.
 
 X<builtins; C<local>>
 
-Внутри C<main()> программа выводит текущее значение C<$scope>, C<outer scope>,
-затем локализует переменную с помощью C<local>. Это изменяет видимость символа
-внутри текущей лексической области видимости, I<так же как> и в любых функциях,
-вызываемых из I<текущей> лексической области видимости. Таким образом, C<$scope>
-содержит C<main() scope> внутри тела как C<middle()>, так и C<inner()>. После
-возврата из C<main()>, когда поток управления достигает конца её блока, Perl
-восстанавливает исходное значение локализованной C<$scope>. Последняя директива
-C<say> снова выводит C<outer scope>.
+Within C<main()>, the program prints C<$scope>'s current value, C<outer scope>,
+then C<local>izes the variable. This changes the visibility of the symbol
+within the current lexical scope I<as well as> in any functions called from the
+I<current> lexical scope; that I<as well as> condition is what dynamic scoping
+does. Thus, C<$scope> contains C<main() scope> within the body of both
+C<middle()> and C<inner()>. After C<main()> returns, when control flow reaches
+the end of its block, Perl restores the original value of the C<local>ized
+C<$scope>. The final C<say> prints C<outer scope> once again.
 
 X<lexicals; pads>
 X<lexpads>
 X<symbol tables>
 
-Переменные пакетов и лексические переменные в Perl имеют разные правила
-видимости и механизмы хранения. Каждая область видимости, содержащая лексические
-переменные, имеет специальную структуру данных, называемую I<лексическая
-записная книжка> (I<lexical pad>, или I<lexpad>), которая может хранить значения
-содержащихся в ней лексических переменных. Каждый раз, когда поток управления
-входит в одну из этих областей видимости, Perl создаёт ещё одну лексическую
-записную книжку для значений этих лексических переменных для этого конкретного вызова.
-Это позволяет функции работать корректно, особенно в рекурсивных вызовах
-(L<recursion>).
+Perl uses different visibility rules and storage mechanisms for package
+variables and lexical variables. Every scope which contains lexical variables
+uses a data structure called a I<lexical pad> or I<lexpad> to store the values
+for its enclosed lexical variables. Every time control flow enters one of these
+scopes, Perl creates another lexpad to contain the values of the lexical
+variables for that particular call. This makes functions work correctly,
+especially in recursive calls (L<recursion>).
 
-Каждый пакет имеет единую I<символьную таблицу>, содержащую переменные пакета, а
-также именованные функции. Импорт (L<importing>) инспектирует и манипулирует
-этой символьной таблицей. Также делает и C<local>. Вы можете локализовать только
-глобальные переменные и глобальные переменные пакета E<mdash> но не лексические
-переменные.
+Each package has a single I<symbol table> which holds package variables and
+well as named functions. Importing (L<importing>) works by inspecting and
+manipulating this symbol table. So does C<local>. You may only C<local>ize
+global and package global variables--never lexical variables.
 
 X<C<$/>>
 X<magic variables; C<$/>>
@@ -247,19 +224,18 @@ X<magic variables; C<$@>>
 X<C<$|>>
 X<magic variables; C<$|>>
 
-C<local> чаще всего используется с магическими переменными. Например, C<$/>,
-разделитель входных записей, определяет, сколько данных операция C<readline>
-прочитает из дескриптора файла. C<$!>, переменная системной ошибки, содержит
-номер ошибки последнего системного вызова. C<$@>, переменная ошибки C<eval>,
-содержит любую ошибку из последней операции C<eval>. C<$|>, переменная
-автосброса, определяет, будет ли Perl сбрасывать текущий выбранный (C<select>)
-дескриптор файла после каждой операции записи.
+C<local> is most often useful with magic variables. For example, C<$/>, the
+input record separator, governs how much data a C<readline> operation will read
+from a filehandle. C<$!>, the system error variable, contains error details for
+the most recent system call. C<$@>, the Perl C<eval> error variable, contains
+any error from the most recent C<eval> operation. C<$|>, the autoflush
+variable, governs whether Perl will flush the currently C<select>ed filehandle
+after every write operation.
 
-Локализация этих переменных в как можно более узкой области видимости
-ограничивает эффект ваших изменений. Это может предотвратить странное поведение
-в других частях вашего кода.
+C<local>izing these in the narrowest possible scope limits the effect of your
+changes. This can prevent strange behavior in other parts of your code.
 
-=head2 Область видимости state
+=head2 State Scope
 
 Z<state_scope>
 
@@ -267,10 +243,9 @@ X<C<state>>
 X<builtins; C<state>>
 X<scope; state>
 
-Perl 5.10 добавил новую область видимости для поддержки встроенной директивы
-C<state>. Область видимости state похожа на лексическую область видимости в
-отношении условий видимости, но добавляет однократную инициализацию, а также
-персистентность значения:
+Perl 5.10 added a new scope to support the C<state> builtin. State scope
+resembles lexical scope in terms of visibility, but adds a one-time
+initialization as well as value persistence:
 
 =begin programlisting
 
@@ -286,13 +261,12 @@ C<state>. Область видимости state похожа на лексич
 
 =end programlisting
 
-При первом вызове C<counter> Perl выполняет единственную инициализацию
-C<$count>. При последующих вызовах C<$count> сохраняет своё предыдущее значение.
-Эта программа выведет C<1>, C<2> и C<3>. Замените C<state> на C<my>, и программа
-будет выводить C<1>, C<1> и C<1>.
+On the first call to C<counter>, Perl performs its single initialization of
+C<$count>. On subsequent calls, C<$count> retains its previous value. This
+program prints C<1>, C<2>, and C<3>. Change C<state> to C<my> and the program
+will print C<1>, C<1>, and C<1>.
 
-Вы можете использовать выражение для установки начального значения
-C<state>-переменной:
+You may use an expression to set a C<state> variable's initial value:
 
 =begin programlisting
 
@@ -308,14 +282,13 @@ C<state>-переменной:
 
 =end programlisting
 
-Несмотря на то, что простое прочтение кода может привести к предположению, что
-выведено будет C<2>, C<4> и C<6>, на самом деле выведено будет C<2>, C<3> и
-C<4>. Первый вызов процедуры C<counter> установит значение переменной C<$count>.
-Последующие вызовы не будут изменять её значение.
+Even though a simple reading of the code may suggest that the output should be
+C<2>, C<4>, and C<6>, the output is actually C<2>, C<3>, and C<4>. The first
+call to the sub C<counter> sets the C<$count> variable. Subsequent calls will
+not change its value.
 
-C<state> может быть полезна для установки значения по умолчанию или подготовки
-кеша, но если вы её используете, убедитесь, что понимаете её инициализационное
-поведение:
+C<state> can be useful for establishing a default value or preparing a cache,
+but be sure to understand its initialization behavior if you use it:
 
 =begin programlisting
 
@@ -332,11 +305,11 @@ C<state> может быть полезна для установки значе
 
 =end programlisting
 
-Счётчик для этой программы выведет C<2>, C<3> и C<4>, как и ожидалось, но
-значения подразумеваемого второго аргумента вызовов C<counter()> будут C<two>,
-C<4> и C<6> E<mdash> потому что C<shift> для первого аргумента происходит только
-при первом вызове C<counter()>. Или измените API для предотвращения этой ошибки,
-или защититесь от неё:
+The counter for this program prints C<2>, C<3>, and C<4> as expected, but the
+values of the intended second arguments to the C<counter()> calls are C<two>,
+C<4>, and C<6>--because the C<shift> of the first argument only happens in the
+first call to C<counter()>. Either change the API to prevent this mistake, or
+guard against it with:
 
 =begin programlisting
 

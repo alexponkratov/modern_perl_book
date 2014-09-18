@@ -1,25 +1,21 @@
-=encoding utf-8
-
-=head1 Эквивалентность методов и функций
+=head1 Method-Function Equivalence
 
 Z<method_sub_equivalence>
 
 X<builtins; C<sub>>
 
-Объектная система Perl 5 преднамеренно минималистична (L<blessed_references>).
-Так как класс является пакетом, Perl не делает различий между функцией и
-методом, хранящимися в пакете. Одна и та же встроенная директива, C<sub>,
-объявляет и одно, и другое. Документация может прояснить ваши намерения, но Perl
-охотно диспетчеризует функцию, вызванную как метод. Подобным же образом вы
-можете вызвать метод как если бы он был функцией E<mdash> полностью
-определённой, экспортированной или ссылкой E<mdash> если вручную передадите свой
-инвокант.
+Perl's object system is deliberately minimal (L<blessed_references>). Because a
+class is a package, Perl does not distinguish between a function and a method
+stored in a package. The same builtin, C<sub>, declares both. Perl will happily
+dispatch to a function called as a method. Likewise, you can invoke a method as
+if it were a function--fully-qualified, exported, or as a reference--if you
+pass in your own invocant manually.
 
-Вызов не того, что нужно, не так, как нужно, вызывает проблемы.
+Invoking the wrong thing in the wrong way causes problems.
 
-=head2 Вызывающая сторона
+=head2 Caller-side
 
-Рассмотрим класс с несколькими методами:
+Consider a class with several methods:
 
 =begin programlisting
 
@@ -32,41 +28,41 @@ X<builtins; C<sub>>
     sub calculate_price
     {
         my $self = shift;
-        return sum( 0, $self->get_items() );
+        return sum( 0, $self->get_items );
     }
 
 =end programlisting
 
-Если есть объект C<$o> класса C<Order>, следующие вызовы этого метода I<могут>
-выглядеть эквивалентными:
+Given an C<Order> object C<$o>, the following invocations of this method I<may>
+seem equivalent:
 
 =begin programlisting
 
-    my $price = $o->calculate_price();
+    my $price = $o->calculate_price;
 
-    # сломано; не использовать
+    # broken; do not use
     my $price = Order::calculate_price( $o );
 
 =end programlisting
 
-Хотя в этом простом случае они дадут один и тот же вывод, последнее нарушает
-инкапсуляцию объекта, избегая поиска метода.
+Though in this simple case, they produce the same output, the latter violates
+object encapsulation by avoiding method lookup.
 
 X<methods; avoid calling as functions>
 
-Если же C<$o> был бы подклассом или алломорфом (L<roles>) класса C<Order>,
-который переопределял бы C<calculate_price()>, обход диспетчеризации метода
-привёл бы к вызову неверного метода. Любое изменение реализации
-C<calculate_price()>, такое как модификация наследования или делегирования через
-C<AUTOLOAD()> E<mdash> могло бы сломать вызывающий код.
+If C<$o> were instead a subclass or allomorph (L<roles>) of C<Order> which
+overrode C<calculate_price()>, bypassing method dispatch would call the wrong
+method. Any change to the implementation of C<calculate_price()>, such as a
+modification of inheritance or delegation through C<AUTOLOAD()>--might break
+calling code.
 
 X<methods; calling with references>
 X<C<UNIVERSAL>; C<can()>>
 X<C<can()>>
 
-В Perl есть одно обстоятельство, где это поведение может выглядеть необходимым.
-Если вы форсируете разрешение метода без диспетчеризации, как вы вызовете
-результирующую ссылку на метод?
+Perl has one circumstance where this behavior may seem necessary. If you force
+method resolution without dispatch, how do you invoke the resulting method
+reference?
 
 =begin programlisting
 
@@ -74,63 +70,62 @@ X<C<can()>>
 
 =end programlisting
 
-Здесь есть две возможности. Первая E<mdash> отбросить возвращаемое значение
-метода C<can()>:
+There are two possibilities.  The first is to discard the return value of the
+C<can()> method:
 
 =begin programlisting
 
-    $o->apply_discount() if $o->can( 'apply_discount' );
+    $o->apply_discount if $o->can( 'apply_discount' );
 
 =end programlisting
 
-Вторая E<mdash> использовать саму ссылку посредством синтаксиса вызова метода:
+The second is to use the reference itself with method invocation syntax:
 
 =begin programlisting
 
     if (my $meth_ref = $o->can( 'apply_discount' ))
     {
-        $o->$meth_ref();
+        $o->B<$meth_ref>();
     }
 
 =end programlisting
 
-Если C<$meth_ref> содержит ссылку на функцию, Perl вызовет эту ссылку с C<$o> в
-качестве инвоканта. Это работает даже со включенным C<strict>, как и при
-вызове метода с помощью скаляра, содержащего его имя:
+When C<$meth_ref> contains a function reference, Perl will invoke that
+reference with C<$o> as the invocant. This works even under strictures, as it
+does when invoking a method with a scalar containing its name:
 
 =begin programlisting
 
     my $name = 'apply_discount';
-    $o->$name();
+    $o->B<$name>();
 
 =end programlisting
 
-Есть один небольшой недостаток в вызове метода по ссылке; если структура программы
-изменяется между сохранением ссылки и вызовом по ссылке, ссылка может уже не
-ссылаться на наиболее соответствующий метод. Если класс C<Order> был изменён так,
-что C<Order::apply_discount> уже не является правильным методом для вызова,
-ссылка в C<$meth_ref> не будет обновлена.
+There is one small drawback in invoking a method by reference; if the structure
+of the program changes between storing the reference and invoking the
+reference, the reference may no longer refer to the most appropriate method. If
+the C<Order> class has changed such that C<Order::apply_discount> is no longer
+the right method to call, the reference in C<$meth_ref> will not have updated.
 
-Когда вы используете эту форму вызова, ограничьте область видимости ссылки.
+When you use this invocation form, limit the scope of the references.
 
-=head2 Вызываемая сторона
+=head2 Callee-side
 
 X<methods; avoid calling as functions>
 X<functions; avoid calling as methods>
 
-Так как Perl 5 не делает различий между функциями и методами в точке объявления,
-и так как I<возможно> (хотя и не рекомендуется) вызвать заданную функцию как
-функцию или метод, возможно написать функцию, которую можно вызывать любым из
-этих способов. Базовый модуль C<CGI> E<mdash> главный обвиняемый. Его функции
-применяют несколько эвристик для определения того, является ли их первый
-аргумент инвокантом.
+Because Perl makes no distinction between functions and methods at the point of
+declaration and because it's I<possible> (however inadvisable) to invoke a
+given function as a function or a method, it's possible to write a function
+callable as either.
 
-Недостатков этого множество. Трудно точно предсказать, какой инвокант
-потенциально валиден для заданного метода, особенно если вам приходится иметь
-дело с подклассами. Также труднее создать API, который пользователи не смогут с
-лёгкостью неправильно использовать, как и бремя документации становится тяжелее.
-Что случится, если одна часть проекта использует процедурный интерфейс, а другая
-E<mdash> объектный?
+The C<CGI> module has these two-faced functions. Every one of them must apply
+several heuristics to determine whether the first argument is an invocant. This
+causes problems. It's difficult to predict exactly which invocants are
+potentially valid for a given method, especially when you may have to deal with
+subclasses. Creating an API that users cannot easily misuse is more difficult
+too, as is your documentation burden. What happens when one part of the project
+uses the procedural interface and another uses the object interface?
 
-Если вам I<необходимо> предоставить отдельный процедурный и ОО интерфейс к
-библиотеке, создайте два отдельных API.
+If you I<must> provide a separate procedural and OO interface to a library,
+create two separate APIs.

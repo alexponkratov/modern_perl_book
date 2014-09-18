@@ -1,112 +1,101 @@
-=encoding utf-8
-
-=head1 Дистрибутивы
+=head1 Distributions
 
 Z<distributions>
 
 X<distribution>
 
-Самый простой способ управлять конфигурацией, сборкой, упаковкой, тестированием и
-установкой программного обеспечения E<mdash> следовать соглашениям
-CPAN-дистрибутивов. I<Дистрибутив> E<mdash> это набор метаданных и одного или
-нескольких модулей (L<modules>), формирующих одну пригодную для распространения,
-тестирования и установки единицу.
+A I<distribution> is a collection of metadata and modules (L<modules>) which
+forms a single redistributable, testable, and installable unit. The easiest way
+to configure, build, package, test, and install Perl code is to follow the
+CPAN's conventions. These conventions govern how to package a distribution, how
+to resolve its dependencies, where to install software, how to verify that it
+works, how to display documentation, and how to manage a repository. All of
+these guidelines have arisen from the rough consensus of thousands of
+contributors working on tens of thousands of projects. A distribution built to
+CPAN standards can be tested on several versions of Perl on several different
+hardware platforms within a few hours of its uploading, with errors reported
+automatically to authors--all without human intervention.
 
-Все эти руководства E<mdash> как упаковать дистрибутив, как разрешать его
-зависимости, куда устанавливать программное обеспечение, как проверять, что оно
-работает, как отображать документацию, как управлять репозиторием E<mdash>
-родились из примерного консенсуса тысяч контрибуторов, работающих над десятками
-тысяч проектов. Дистрибутив, построенный по стандартам CPAN, может быть
-протестирован на нескольких версиях Perl 5 на нескольких разных аппаратных
-платформах в течение нескольких часов после загрузки, при этом об ошибках будет
-автоматически сообщено авторам E<mdash> и всё это без вмешательства человека.
+You may choose never to release any of your code as public CPAN distributions,
+but you I<can> use CPAN tools and conventions to manage even private code. The
+Perl community has built amazing infrastructure; why not take advantage of it?
 
-Вы можете никогда не выпускать свой код как публичные CPAN-дистрибутивы, но вы
-можете использовать инструменты и соглашения CPAN даже для управления частным
-кодом. Сообщество Perl построило восхитительную инфраструктуру; почему бы ей не
-воспользоваться?
+=head2 Attributes of a Distribution
 
-=head2 Характеристики дистрибутива
-
-Помимо одного или нескольких модулей, дистрибутив включает несколько других
-файлов и директорий:
+Besides one or more modules, a distribution includes several other files and
+directories:
 
 =over 4
 
-=item * F<Build.PL> или F<Makefile.PL>, программа-драйвер, используемая для
-конфигурации, сборки, тестирования, компоновки и установки дистрибутива.
+=item * F<Build.PL> or F<Makefile.PL>, a driver program used to configure,
+build, test, bundle, and install the distribution.
 
-=item * F<MANIFEST>, список всех файлов, входящих в дистрибутив. Это помогает
-инструментам удостовериться, что комплект полон.
+=item * F<MANIFEST>, a list of all files contained in the distribution. This
+helps tools verify that a bundle is complete.
 
-=item * F<META.yml> и/или F<META.json>, файл, содержащий метаданные о
-дистрибутиве и его зависимостях.
+=item * F<META.yml> and/or F<META.json>, a file containing metadata about the
+distribution and its dependencies.
 
-=item * F<README>, описание дистрибутива, его предназначения, его авторских прав
-и информации о лицензии.
+=item * F<README>, a description of the distribution, its intent, and its
+copyright and licensing information.
 
-=item * F<lib/>, директория, в которой содержатся Perl-модули.
+=item * F<lib/>, the directory containing Perl modules.
 
-=item * F<t/>, директория, в которой содержатся файлы тестов.
+=item * F<t/>, a directory containing test files.
 
-=item * F<Changes>, лог каждого изменения дистрибутива.
+=item * F<Changes>, a human-readable log of every significant change to the
+distribution.
 
 =back
 
 X<CPAN; CPANTS>
 
-Правильно построенный дистрибутив должен содержать уникальное имя и единый
-номер версии (который часто берётся из его основного модуля). Любой дистрибутив,
-который вы скачаете из публичной CPAN, должен соответствовать этим стандартам.
-Публичный сервис CPANTS (U<http://cpants.perl.org/>) проверяет каждый
-загруженный модуль по руководствам и соглашениям сборки и рекомендует улучшения.
-Следование руководствам CPANTS не означает, что код работает, но означает, что
-инструменты сборки CPAN должны понять дистрибутив.
+A well-formed distribution must contain a unique name and single version number
+(often taken from its primary module). Any distribution you download from the
+public CPAN should conform to these standards. The public CPANTS service
+(U<http://cpants.perl.org/>) evaluates each uploaded distribution against
+packaging guidelines and conventions and recommends improvements. Following the
+CPANTS guidelines doesn't mean the code works, but it does mean that the CPAN
+packaging tools should understand the distribution.
 
-=head2 Инструменты CPAN для управления дистрибутивами
+=head2 CPAN Tools for Managing Distributions
 
-Ядро Perl 5 включает несколько инструментов для установки, разработки и
-управления вашими собственными дистрибутивами:
+The Perl core includes several tools to manage distributions:
 
 X<C<CPAN>>
-X<C<CPANPLUS>>
 
 =over 4
 
-=item * C<CPAN.pm> E<mdash> официальный CPAN-клиент; C<CPANPLUS> E<mdash>
-альтернатива. Они в основном аналогичны. Хотя по умолчанию эти клиенты
-устанавливают дистрибутивы из публичной CPAN, вы можете вместо или дополнительно
-к этому направить их на свой собственный репозиторий.
+=item * C<CPAN.pm> is the official CPAN client. While by default this client
+installs distributions from the public CPAN, you can also use your ownpoint them to your own
+repository instead of or in addition to the public repository.
 
 X<C<Module::Build>>
 
-=item * C<Module::Build> E<mdash> это написанный на чистом Perl набор
-инструментов для конфигурирования, сборки, установки и тестирования
-дистрибутивов. Он работает с файлами F<Build.PL>.
+=item * C<Module::Build> is a pure-Perl tool suite for configuring, building,
+installing, and testing distributions. It works with F<Build.PL> files.
 
 X<C<ExtUtils::MakeMaker>>
 
-=item * C<ExtUtils::MakeMaker> E<mdash> это унаследованный инструмент, на замену
-которому предназначен C<Module::Build>. Он всё ещё широко используется, хотя
-находится в режиме поддержки и получает только критические исправления ошибок.
-Он работает с файлами F<Makefile.PL>.
+=item * C<ExtUtils::MakeMaker> is a legacy tool which C<Module::Build> intends
+to replace. It is still in wide use, though it is in maintenance mode and
+receives only critical bug fixes. It works with F<Makefile.PL> files.
 
 X<C<Test::More>>
 
-=item * C<Test::More> (L<testing>) E<mdash> базовый и самый широко используемый
-модуль тестирования, предназначенный для написания автоматизированных тестов
-для программного обеспечения на Perl.
+=item * C<Test::More> (L<testing>) is the basic and most widely used testing
+module used to write automated tests for Perl software.
 
-X<C<Test::Harness>>
+X<C<TAP::Harness>>
 X<C<prove>>
 
-=item * C<Test::Harness> и C<prove> (L<running_tests>) запускают тесты и
-интерпретируют и генерируют отчёты по их результатам.
+=item * C<TAP::Harness> and C<prove> (L<running_tests>) run tests and interpret
+and report their results.
 
 =back
 
-В дополнение к этому, несколько дополнительных CPAN-модулей сделают легче вашу
-жизнь как разработчика:
+In addition, several non-core CPAN modules make your life easier as a
+developer:
 
 X<CPAN; C<App::cpanminus>>
 X<cpanminus>
@@ -114,81 +103,82 @@ X<cpanm>
 
 =over 4
 
-=item * C<App::cpanminus> E<mdash> это не требующий конфигурации CPAN-клиент. Он
-обрабатывает наиболее распространённые случаи, использует мало памяти и быстро
-работает.
+=item * C<App::cpanminus> is a configuration-free CPAN client. It handles the
+most common cases, uses little memory, and works quickly.
 
 X<CPAN; C<App::perlbrew>>
 X<perlbrew>
 
-=item * C<App::perlbrew> помогает вам управлять несколькими инсталляциями
-Perl 5. Установите новые версии Perl 5 для тестирования или производственной
-среды, или чтобы изолировать приложения и их зависимости.
+=item * C<App::perlbrew> helps you to manage multiple installations of Perl.
+Install new versions of Perl for testing or production, or to isolate
+applications and their dependencies.
 
 X<CPAN; C<CPAN::Mini>>
 X<CPAN; C<cpanmini>>
 
-=item * C<CPAN::Mini> и комманда C<cpanmini> позволяют вам создать своё
-собственное (частное) зеркало публичной CPAN. Вы можете ввести в этот
-репозиторий свои собственные дистрибутивы и управлять тем, какие версии
-публичных модулей доступны в вашей организации.
+=item * C<CPAN::Mini> and the C<cpanmini> command allow you to create your own
+(private) mirror of the public CPAN.  You can inject your own distributions
+into this repository and manage which versions of the public modules are
+available in your organization.
 
 X<CPAN; C<Dist::Zilla>>
 X<CPAN; C<Module::Build>>
 X<C<ExtUtils::MakeMaker>>
 
-=item * C<Dist::Zilla> автоматизирует наиболее распространённые задачи
-распространения дистрибутивов. Хотя он использует либо C<Module::Build>, либо
-C<ExtUtils::MakeMaker>, он может заменить I<ваше> использование их напрямую.
-Смотрите интерактивное руководство по адресу U<http://dzil.org/>.
+=item * C<Dist::Zilla> automates away common distribution tasks. While it
+uses either C<Module::Build> or C<ExtUtils::MakeMaker>, it can replace I<your>
+use of them directly. See U<http://dzil.org/> for an interactive tutorial.
 
 X<CPAN; C<Test::Reporter>>
 
-=item * C<Test::Reporter> позволяет вам выводить отчёты по результатам запуска
-набора автоматизированных тестов дистрибутивов, которые вы устанавливаете, давая
-их авторам больше данных о сбоях.
+=item * C<Test::Reporter> allows you to report the results of running the
+automated test suites of distributions you install, giving their authors more
+data on any failures.
+
+X<carton>
+X<Pinto>
+
+=item * Carton and Pinto are two newer projects which help manage and install
+code's dependencies. Neither is in widespread use yet, but they're both under
+active development.
 
 =back
 
-=head2 Проектирование дистрибутивов
+=head2 Designing Distributions
 
 X<CPAN; C<Module::Starter>>
 
-Описание процесса проектирования дистрибутива может занять целую книгу (см.
-I<Writing Perl Modules for CPAN> Сэма Трегара (Sam Tregar)), но несколько
-принципов дизайна помогут вам. Начните с такой утилиты как C<Module::Starter>
-или C<Dist::Zilla>. Начальная стоимость изучения конфигурации и правил может
-выглядеть как чрезмерная инвестиция, но преимущества того, что всё будет
-правильно настроено (и в случае C<Dist::Zilla> I<никогда> не устареет)
-освобождает вас от намного более утомительной бухгалтерии.
+The process of designing a distribution could fill a book (see Sam Tregar's
+I<Writing Perl Modules for CPAN>), but a few design principles will help you.
+Start with a utility such as C<Module::Starter> or C<Dist::Zilla>. The initial
+cost of learning the configuration and rules may seem like a steep investment,
+but the benefit of having everything set up the right way (and in the case of
+C<Dist::Zilla>, I<never> going out of date) relieves you of tedious busywork.
 
-Затем рассмотрите несколько правил:
+A distribution should follow several non-code guidelines:
 
 =over 4
 
-=item * I<Каждый дистрибутив должен иметь единственное, чётко определённое
-предназначение.> Этим предназначением может быть даже сборка нескольких
-связанных дистрибутивов в один устанавливаемый комплект. Декомпозиция вашего
-программного обеспечения на отдельные дистрибутивы позволяет вам соответственно
-управлять их зависимостями и соблюдать их инкапсуляцию.
+=item * I<Each distribution performs a single, well-defined purpose.> That purpose
+may even include gathering several related distributions into a single
+installable bundle. Decompose your software into individual distributions to
+manage their dependencies appropriately and to respect their encapsulation.
 
-=item * I<Каждый дистрибутив должен иметь единственный номер версии.> Номера
-версий всегда должны увеличиваться. Политика семантических версий
-(U<http://semver.org/>) разумна и совместима с подходом Perl 5.
+=item * I<Each distribution contains a single version number.> Version numbers
+must always increase. The semantic version policy (U<http://semver.org/>) is
+sane and compatible with Perl's approach.
 
-=item * I<Каждый дистрибутив требует хорошо определённого API.> Всесторонний
-автоматизированный набор тестов может проверить, что вы поддерживаете этот API
-между версиями. Если вы используете локальное зеркало CPAN для установки своих
-собственных дистрибутивов, вы можете использовать инфраструктуру CPAN для
-тестирования дистрибутивов и их зависимостей. Вы получите лёгкий доступ к
-интеграционному тестированию пригодных к повторному использованию компонентов.
+=item * I<Each distribution provides a well-defined API.> A comprehensive
+automated test suite can verify that you maintain this API across versions.  If
+you use a local CPAN mirror to install your own distributions, you can re-use
+the CPAN infrastructure for testing distributions and their dependencies.  You
+get easy access to integration testing across reusable components.
 
-=item * I<Автоматизируйте тесты вашего дистрибутива и сделайте их повторяемыми и
-ценными.> Инфраструктура CPAN поддерживает отчёты автоматизированного
-тестирования. Используйте это!
+=item * I<Distribution tests are useful and repeatable.> The CPAN
+infrastructure supports automated test reporting. Use it!
 
-=item * I<Предоставьте эффективный и простой интерфейс.> Избегайте использования
-глобальных символов и экспорта по умолчанию; позвольте людям использовать только
-то, что им нужно. Не загрязняйте их пространства имён.
+=item * I<Interfaces are simple and effective.> Avoid the use of global symbols
+and default exports; allow people to use only what they need. Do not pollute
+their namespaces.
 
 =back

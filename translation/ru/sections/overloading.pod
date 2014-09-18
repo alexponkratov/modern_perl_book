@@ -1,31 +1,32 @@
-=encoding utf-8
-
-=head1 Перегрузка
+=head1 Overloading
 
 Z<overloading>
 X<overloading>
 
-Perl 5 не является глубоко объектно-ориентированным языком. Его внутренние типы
-данных (скаляры, массивы и хеши) не являются объектами с перегружаемыми
-методами, но вы I<можете> контролировать поведение своих собственных классов и
-объектов, особенно когда они подвергаются приведению типов или контекстному
-вычислению. Это I<перегрузка>.
+Perl is not a pervasively object oriented language. Its core data types
+(scalars, arrays, and hashes) are not objects with methods, but you I<can>
+control the behavior of your own classes and objects, especially when they
+undergo coercion or contextual evaluation. This is I<overloading>.
 
-Перегрузка может быть неочевидной, но мощной. Интересный пример E<mdash>
-перегрузка того, как объект ведёт себя в булевом контексте, особенно если вы
-используете что-нибудь вроде шаблона ноль-объекта
-(U<http://www.c2.com/cgi/wiki?NullObject>). В булевом контексте объект будет
-восприниматься как истинное значение, если вы не перегрузите преобразование в
-булево значение.
+Overloading is subtle but powerful. An interesting example is overloading how
+an object behaves in boolean context. In boolean context, an object will
+evaluate to a true value, unless you overload boolification.
 
-Вы можете перегрузить поведение объекта почти для любой операции или приведения
-типа: преобразование в строку, преобразование в число, преобразование в булево
-значение, итерации, вызов, обращение как к массиву, обращение как к хешу,
-арифметические операции, операции сравнения, умное сопоставление, побитовые
-операции и даже присваивание. Преобразование в строку, в число и в булево
-значение наиболее важны и наиболее распространены.
+=begin tip Overloading Boolean Context
 
-=head2 Перегрузка распространённых операций
+Why overload boolean context? Suppose you're using the Null Object pattern
+(U<http://www.c2.com/cgi/wiki?NullObject>) to make your own objects appear
+false in boolean context.
+
+=end tip
+
+You can overload what the object does for almost every operation or coercion:
+stringification, numification, boolification, iteration, invocation, array
+access, hash access, arithmetic operations, comparison operations, smart match,
+bitwise operations, and even assignment. Stringification, numification, and
+boolification are the most important and most common.
+
+=head2 Overloading Common Operations
 
 X<overloading; boolean>
 X<overloading; numeric>
@@ -33,11 +34,10 @@ X<overloading; string>
 X<C<overload> pragma>
 X<pragmas; C<overload>>
 
-Прагма C<overload> позволяет вам ассоциировать функцию с операцией, которую вы
-можете перегрузить, передав пары аргументов, где ключ обозначает тип перегрузки,
-а значение E<mdash> ссылка на функцию, которая должна вызываться для этой
-операции. Класс C<Null>, перегружающий булево вычисление так, что он всегда будет
-восприниматься как ложное значение, может выглядеть так:
+The C<overload> pragma associates functions with overloadable operations.
+Passing argument pairs, where the key is the name of a type of overload and the
+value is a function reference. A C<Null> class which overloads boolean
+evaluation so that it always evaluates to a false value might resemble:
 
 =begin programlisting
 
@@ -50,7 +50,7 @@ X<pragmas; C<overload>>
 
 =end programlisting
 
-Можно легко добавить преобразование в строку:
+It's easy to add a stringification:
 
 =begin programlisting
 
@@ -63,17 +63,16 @@ X<pragmas; C<overload>>
 
 =end programlisting
 
-Переопределение преобразования в число более сложно, потому что арифметические
-операторы имеют тенденцию быть бинарными (L<arity>). Если есть два оператора,
-оба с перегруженными методами для сложения, какой будет приоритетнее? Ответ
-должен быть последовательным, простым для объяснения и понятным людям, которые
-не читали исходный код реализации.
+Overriding numification is more complex, because arithmetic operators tend to
+be binary ops (L<arity>). Given two operands both with overloaded methods for
+addition, which overloading should take precedence? The answer needs to be
+consistent, easy to explain, and understandable by people who haven't read the
+source code of the implementation.
 
-C<perldoc overload> пытается объяснить это в разделах I<Calling Conventions for
-Binary Operations> и I<MAGIC AUTOGENERATION>, но наиболее простое решение
-E<mdash> перегрузить преобразование в число (имеющее ключ C<'0+'>) и указать
-C<overload> использовать предоставленные перегрузки как запасной вариант
-(fallback) где возможно:
+C<perldoc overload> attempts to explain this in the sections labeled I<Calling
+Conventions for Binary Operations> and I<MAGIC AUTOGENERATION>, but the easiest
+solution is to overload numification (keyed by C<'0+'>) and tell C<overload> to
+use the provided overloads as fallbacks where possible:
 
 =begin programlisting
 
@@ -88,28 +87,26 @@ C<overload> использовать предоставленные перегр
 
 =end programlisting
 
-Установка C<fallback> в истинное значение позволяет Perl использовать любые
-другие определённые перегрузки для выполнения запрошенной операции, если
-возможно. Если это невозможно, Perl будет действовать так, как если бы не было
-никаких перегрузок. Это часто именно то, чего вы хотите.
+Setting C<fallback> to a true value lets Perl use any other defined overloads
+to compose the requested operation when possible. If that's not possible, Perl
+will act as if there were no overloads in effect. This is often what you want.
 
-Без C<fallback> Perl будет использовать только конкретные перегрузки, которые
-вы предоставили. Если кто-нибудь попытается выполнить операцию, которую вы не
-перегрузили, Perl выбросит исключение.
+Without C<fallback>, Perl will only use the specific overloadings you have
+provided. If someone tries to perform an operation you have not overloaded,
+Perl will throw an exception.
 
-=head2 Перегрузка и наследование
+=head2 Overload and Inheritance
 
 X<overloading; inheritance>
 
-Подклассы наследуют перегрузки от своих предков. Они могут переопределить это
-поведение одним из двух способов. Если родительский класс использует перегрузку
-как показано, с напрямую предоставленными ссылками на функции, класс-потомок
-I<должен> переопределить перегруженное поведение родителя с помощью прямого
-использования C<overload>.
+Subclasses inherit overloadings from their ancestors. They may override this
+behavior in one of two ways. If the parent class uses overloading as shown,
+with function references provided directly, a child class I<must> override the
+parent's overloaded behavior by using C<overload> directly.
 
-Родительские классы могут позволить своим потомкам большую гибкость, указывая
-I<имя> метода для вызова в качестве реализации перегрузки, вместо хардкода
-ссылки на функцию:
+If you're writing a parent class, use the I<name> of a method rather than a
+function reference. That'll allow child classes to prove their own overloadings
+by overriding the named methods:
 
 =begin programlisting
 
@@ -124,31 +121,27 @@ I<имя> метода для вызова в качестве реализац�
 
 =end programlisting
 
-В этом случае любые дочерние классы могут выполнять эти перегруженные операции
-иначе, переопределив методы с соответствующими именами.
+Any child class can do something different for boolification by overriding
+C<get_bool()>, for example.
 
-=head2 Использование перегрузки
+=head2 Uses of Overloading
 
 X<CPAN; C<IO::All>>
 
-Перегрузка может выглядеть заманчивым инструментом для использования для
-генерации символьных сокращений для новых операций, но это редко происходит в
-Perl 5 по весомым причинам. CPAN-дистрибутив C<IO::All> доводит эту идею до
-предела в производстве умных идей для краткого и компонуемого кода. Однако на
-каждый блестящий API, доведённый до совершенства путём соответствующего
-использования перегрузки, дюжина других устраивают бардак. Иногда лучший код
-избегает умности в пользу простоты.
+Overloading may seem like a tempting tool to use to produce symbolic shortcuts
+for new operations, but it's rare for a good reason. The C<IO::All> CPAN
+distribution pushes this idea to its limit. In return, you get a simple and
+elegant API. Yet for every brilliant API refined through the appropriate use of
+overloading, a dozen more messes congeal. Sometimes the best code eschews
+cleverness in favor of simplicity.
 
-Переопределение сложения, умножения и даже конкатенации в классе C<Matrix> имеет
-смысл только из-за того, что распространена существующая нотация для этих
-операций. Новая предметная область, не имеющая такой установившейся нотации
-E<mdash> плохой кандидат для перегрузки, как и предметная область, в которой вам
-приходится изощряться, чтобы поставить существующие операторы Perl в соответствие
-с другой нотацией.
+Overriding addition, multiplication, and even concatenation on a C<Matrix>
+class makes sense, only because the existing notation for those operations is
+pervasive. A new problem domain without that established notation is a poor
+candidate for overloading, as is a problem domain where you have to squint to
+make Perl's existing operators match a different notation.
 
-I<Perl Best Practices> Демьена Конвея (Damian Conway) предлагают другое
-использование перегрузки: для предотвращения случайного неправильного
-использования объектов. Например, перегрузка преобразования в число таким
-образом, чтобы она делала C<croak()>, для объектов, не имеющих разумного
-представления в виде одного числа, может помочь вам найти и исправить реальные
-ошибки.
+Damian Conway's I<Perl Best Practices> suggests one other use for overloading:
+to prevent the accidental abuse of objects.  For example, overloading
+numification to C<croak()> for objects which have no reasonable single numeric
+representation can help you find and fix real bugs.

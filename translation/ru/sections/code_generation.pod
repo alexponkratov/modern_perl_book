@@ -1,47 +1,43 @@
-=encoding utf-8
-
-=head1 Кодогенерация
+=head1 Code Generation
 
 Z<code_generation>
 
-Новички в программировании пишут больше кода, чем нужно, частично из-за
-недостаточно близкого знакомства с языками, библиотеками и идиомами, но также и
-из-за отсутствия опыта. Они начинают с написания длинного процедурного кода,
-затем открывают для себя функции, затем параметры, затем объекты, и E<mdash>
-возможно E<mdash> функции высших порядков и замыкания.
+Novice programmers write more code than they need to write, partly from
+unfamiliarity with languages, libraries, and idioms, but also due to
+inexperience. They start by writing long lists of procedural code, then
+discover functions, then parameters, then objects, and--perhaps--higher-order
+functions and closures.
 
-По мере того, как вы становитесь лучше как программист, вы будете писать меньше
-кода для решения тех же самых задач. Вы будете использовать лучшие абстракции.
-Вы будете писать более универсальный код. Вы сможете повторно использовать код
-E<mdash> и когда вы сможете добавлять возможности, удаляя код, вы достигнене
-чего-то замечательного.
+As you become a better programmer, you'll write less code to solve the same
+problems. You'll use better abstractions. You'll write more general code. You
+can reuse code--and when you can add features by deleting code, you'll achieve
+something great.
 
 X<metaprogramming>
 X<code generation>
 
-Написание программ, пишуших для вас программы E<mdash> I<метапрограммирование>
-или I<кодогенерация> E<mdash> предлагает большие возможности для абстракции.
-Хотя вы можете устроить огромный бардак, но вы можете и создать изумительные
-вещи. Например, техники метапрограммирования делают возможным Moose (L<moose>):
+Writing programs to write programs for you--I<metaprogramming> or I<code
+generation>--allows you to build reusable abstractions. While you can make a
+huge mess, you can also build amazing things. For example, metaprogramming
+techniques make Moose possible (L<moose>).
 
-Техника использования C<AUTOLOAD> (L<autoload>) для отсутствующих функций и
-методов демонстрирует эту технику в ограниченной форме; система диспетчеризации
-функций и методов в Perl 5 позволяет вам настроить, что происходит, когда
-нормальный поиск проваливается.
+The C<AUTOLOAD> technique (L<autoload>) for missing functions and methods
+demonstrates this technique in a specific form: Perl's function and method
+dispatch system allows you to control what happens when normal lookup fails.
 
 =head2 eval
 
 X<C<eval>; string>
 X<builtins; C<eval>>
 
-Самая простая техника кодогенерации E<mdash> это формирование строки, содержащей
-фрагмент валидного кода на Perl, и компиляция её с помощью строкового оператора
-C<eval>. В отличие от отлавливающего исключения блочного оператора C<eval>,
-строковый C<eval> компилирует содержимое строки в текущей области видимости,
-включая текущий пакет и лексические привязки.
+The simplest code generation technique is to build a string containing a
+snippet of valid Perl and compile it with the string C<eval> operator. Unlike
+the exception-catching block C<eval> operator, string C<eval> compiles the
+contents of the string within the current scope, including the current package
+and lexical bindings.
 
-Наиболее общее использование этой техники E<mdash> предоставление возможности
-отката, если вы не можете (или не хотите) загружать опциональную зависимость:
+A common use for this technique is providing a fallback if you can't (or don't
+want to) load an optional dependency:
 
 =begin programlisting
 
@@ -50,11 +46,11 @@ C<eval>. В отличие от отлавливающего исключени�
 
 =end programlisting
 
-Если C<Monkey::Tracer> недоступен, его функция C<log()> будет существовать, но
-ничего не будет делать. Однако этот простой пример обманчив. Правильное
-использование C<eval> требует определённой работы; вы должны обработать проблемы
-заключения в кавычки для включения переменных в передаваемый в C<eval> код.
-Добавьте сложности чтобы интерполировать одни переменные, но не другие:
+If C<Monkey::Tracer> is not available, this code defines a C<log()> function
+which will do nothing. This simple example is deceptive, because getting
+C<eval> right takes some work. You must handle quoting issues to include
+variables within your C<eval>d code. Add more complexity to interpolate some
+variables but not others:
 
 =begin programlisting
 
@@ -79,18 +75,19 @@ C<eval>. В отличие от отлавливающего исключени�
 
 =end programlisting
 
-Горе тем, кто забыл обратный слеш! Удачи в объяснении вашей подсветке синтаксиса,
-что происходит! Хуже того, каждый вызов строкового C<eval> создаёт новую
-структуру данных, представляющую код целиком, и компиляция кода тоже не
-бесплатна. Но даже с этими ограничениями эта техника проста.
+Woe to those who forget a backslash! Good luck convincing your syntax
+highlighter what's happening! Worse yet, each invocation of string C<eval>
+builds a new data structure representing the entire code. Compiling code isn't
+free, either. Yet even with its limitations, this technique is simple and
+useful.
 
-=head2 Параметризованные замыкания
+=head2 Parametric Closures
 
 X<closures; parametric>
 
-Хотя построение аксессоров и мутаторов с помощью C<eval> просто, замыкания
-(L<closures>) позволяют вам добавлять параметры в генерируемый код во время
-компиляции без необходимости дополнительного вычисления:
+While building accessors and mutators with C<eval> is straightforward, closures
+(L<closures>) allow you to add parameters to generated code at compilation time
+I<without> requiring additional evaluation:
 
 =begin programlisting
 
@@ -115,27 +112,24 @@ X<closures; parametric>
 
 =end programlisting
 
-Этот код избегает неприятных проблем с заключением в кавычки и компилирует
-каждое замыкание только один раз. Он даже использует меньше памяти из-за
-разделения скомпилированного кода между всеми экземплярами замыканий. Всё, что
-различается E<mdash> это привязка к лексической переменной C<$attrname>. В
-долго выполняющихся процессах, или при большом количестве аксессоров, эта
-техника может быть очень полезна.
+This code avoids unpleasant quoting issues and compiles each closure only once.
+It even uses less memory by sharing the compiled code between all closure
+instances. All that differs is the binding to the C<$attrname> lexical. In a
+long-running process or a class with a lot of accessors, this technique can be
+very useful.
 
 X<closures; installing into symbol table>
 X<symbol tables>
 
-Установка в таблицу символов относительно проста, хоть и некрасива:
+Installing into symbol tables is reasonably easy, if ugly:
 
 =begin programlisting
 
-    {
-        my ($get, $set) = generate_accessors( 'pie' );
+    my ($get, $set) = generate_accessors( 'pie' );
 
-        no strict 'refs';
-        *{ 'get_pie' } = $get;
-        *{ 'set_pie' } = $set;
-    }
+    no strict 'refs';
+    *{ 'get_pie' } = $get;
+    *{ 'set_pie' } = $set;
 
 =end programlisting
 
@@ -143,50 +137,49 @@ X<C<*>; sigil>
 X<sigils; C<*>>
 X<typeglobs>
 
-Странный синтаксис звёздочкиN<Воспринимайте её как I<сигил тайпглоба>, где
-I<тайпглоб> E<mdash> Perl-жаргон для E<laquo>таблицы символовE<raquo>.>
-разыменовывает хеш, ссылающийся на символ в текущей I<таблице символов>,
-являющейся частью текущего пространства имён, содержащего глобально-доступные
-символы, такие как глобальные данные пакета, функции и методы. Присваивание
-ссылки записи таблицы символов устанавливает или заменяет соответствующую
-запись. Чтобы повысить анонимную функцию до метода, сохраните ссылку на эту
-функцию в таблице символов.
-
-=begin tip Упрощённые таблицы символов
-
-X<CPAN; C<Package::Stash>>
-
-CPAN-модуль C<Package::Stash> предлагает более приятный интерфейс для подобного
-хакинга таблицы символов.
-
-=end tip
+The odd syntax of an asteriskN<Think of it as a I<typeglob sigil>, where a
+I<typeglob> is Perl jargon for "symbol table".> dereferencing a hash refers to
+a symbol in the current I<symbol table>, which is the section of the current
+namespace which contains globally-accessible symbols such as package globals,
+functions, and methods. Assigning a reference to a symbol table entry installs
+or replaces that entry. To promote an anonymous function to a method, store
+that function's reference in the symbol table.
 
 X<C<strict> pragma>
 X<pragmas; C<strict>>
 
-Присваивание таблице символов символа, содержащего строку, не литеральное
-имя переменной, это символическая ссылка. Для этой операции вам нужно отключить
-строгую проверку ссылок C<strict>. Многие программы имеют неочевидный баг в
-аналогичном коде, так как они присваивают и генерируют в одной строчке:
+Assigning to a symbol table symbol with a string, not a literal variable name,
+is a symbolic reference. You must disable C<strict> reference checking for the
+operation. Many programs have a subtle bug in similar code, as they assign and
+generate in a single line:
+
+=begin programlisting
+
+    no strict 'refs';
+
+    *{ $methname } = sub {
+        # subtle bug: strict refs disabled here too
+    };
+
+=end programlisting
+
+This example disables strictures for the outer block I<as well as the body of
+the function itself>. Only the assignment violates strict reference checking,
+so disable strictures for that operation alone:
 
 =begin programlisting
 
     {
-        no strict 'refs';
+        my $sub = sub { ... };
 
-        *{ $methname } = sub {
-            # неочевидный баг: strict refs отключено здесь тоже
-        };
+        no strict 'refs';
+        *{ $methname } = $sub;
     }
 
 =end programlisting
 
-Этот пример отключает ограничения для внешнего блока, так же как и для тела
-самой функции. Только присваивание нарушает строгую проверку ссылок, так что
-отключайте ограничения только для этой операции.
-
-Если имя метода E<mdash> строковый литерал в вашем исходном коде, а не
-содержимое переменной, вы можете присвоить соответсвующему символу напрямую:
+If the name of the method is a string literal in your source code, rather than
+the contents of a variable, you can assign to the relevant symbol directly:
 
 =begin programlisting
 
@@ -198,28 +191,37 @@ X<pragmas; C<strict>>
 
 =end programlisting
 
-Прямое присваивание глобу не нарушает ограничения, но упоминание глоба только
-раз I<будет> генерировать предупреждение E<laquo>used only onceE<raquo>, если
-вы явно не подавите его в области видимости.
+Assigning directly to the glob does not violate strictures, but mentioning each
+glob only once I<does> produce a "used only once" warning you can disable with
+the C<warnings> pragma.
 
-=head2 Манипуляции времени компиляции
+=begin tip Symbol Tables Simplified
+
+X<CPAN; C<Package::Stash>>
+
+Use the CPAN module C<Package::Stash> instead of manipulating symbol tables
+yourself.
+
+=end tip
+
+=head2 Compile-time Manipulation
 
 X<builtins; C<eval>>
 
-В отличие от кода, написанного явно как код, код, генерируемый с помощью
-строкового C<eval>, компилируется во время выполнения. Там, где вы можете
-ожидать от нормальной функции, что она будет доступна всё время жизни программы,
-сгенерированная функция может не быть доступной, когда вы этого ожидаете.
+Unlike code written explicitly as code, code generated through string C<eval>
+gets compiled at runtime. Where you might expect a normal function to be
+available throughout the lifetime of your program, a generated function might
+not be available when you expect it.
 
 X<C<BEGIN>>
 
-Заставьте Perl выполнять код E<mdash> генерирующий другой код E<mdash> во время
-компиляции, обернув его в блок C<BEGIN>. Когда парсер Perl 5 встречает блок
-C<BEGIN>, он парсит весь блок. Если он не содержит синтаксических ошибок, блок
-будет выполнен немедленно. После его завершения парсинг продолжится, как если бы
-не было никаких прерываний.
+Force Perl to run code--to generate other code--during compilation by wrapping
+it in a C<BEGIN> block. When the Perl parser encounters a block labeled
+C<BEGIN>, it parses and compiles the entire block, then runs it (unless it has
+syntax errors). When it finishes, parsing will continue as if there had been no
+interruption.
 
-Разница между записью:
+The difference between writing:
 
 =begin programlisting
 
@@ -234,7 +236,7 @@ C<BEGIN>, он парсит весь блок. Если он не содержи
 
 =end programlisting
 
-E<hellip>и:
+... and:
 
 =begin programlisting
 
@@ -255,44 +257,42 @@ E<hellip>и:
 
 =end programlisting
 
-E<hellip>преимущественно в поддерживаемости.
+... is primarily one of maintainability.
 
 X<C<BEGIN>; implicit>
 X<modules; implicit C<BEGIN>>
 
-Внутри модуля, любой код за пределами функций выполняется, когда вы используете
-его посредством C<use>, из-за неявного C<BEGIN>, который Perl добавляет вокруг
-C<require> и C<import> (L<importing>). Любой код за пределами функций, но внутри
-модуля, будет выполнен I<перед> тем, как произойдёт вызов C<import()>. Если вы
-загружаете модуль с помощью I<require>, неявного блока C<BEGIN> не будет.
-Выполнение кода за пределами функций произойдёт в I<конце> парсинга.
+Within a module, any code outside of functions executes when you C<use> it,
+because of the implicit C<BEGIN> Perl adds around the C<require> and C<import>
+(L<importing>). Any code outside of a function but inside the module will
+execute I<before> the C<import()> call occurs. If you C<require> the module,
+there is no implicit C<BEGIN> block. After parsing finishes, Perl will run code
+outside of the functions.
 
-Учитывайте взаимодействие между лексическими I<объявлениями> (ассоциирование
-имени с областью видимости) и лексическими I<присваиваниями>. Первые происходят
-во время компиляции, тогда как последние происходят в точке выполнения. Этот код
-имеет неочевидный баг:
-
-X<CPAN; C<UNIVERSAL::require>>
+Beware of the interaction between lexical I<declaration> (the association of a
+name with a scope) and lexical I<assignment>. The former happens during
+compilation, while the latter occurs at the point of execution. This code has a
+subtle bug:
 
 =begin programlisting
 
-    # добавляет метод require() в UNIVERSAL
     use UNIVERSAL::require;
 
-    # ведёт к ошибкам; не использовать
+    # buggy; do not use
     my $wanted_package = 'Monkey::Jetpack';
 
     BEGIN
     {
-        $wanted_package->require();
-        $wanted_package->import();
+        $wanted_package->require;
+        $wanted_package->import;
     }
 
 =end programlisting
 
-E<hellip>потому что блок C<BEGIN> будет выпволнен I<перед> тем, как произойдёт
-присваивание строкового значения C<$wanted_package>. Результатом будет
-исключение из-за попытки вызвать метод C<require()> на неопределённом значении.
+... because the C<BEGIN> block will execute I<before> the assignment of the
+string value to C<$wanted_package> occurs. The result will be an exception from
+attempting to invoke the C<require()> methodN<C<UNIVERSAL::require> adds a
+C<require()> method to C<UNIVERSAL>.> on an undefined value.
 
 =head2 Class::MOP
 
@@ -303,17 +303,17 @@ X<Moose>
 X<objects; meta object protocol>
 X<meta object protocol>
 
-В отличие от установки ссылок на функции для заполнения пространств имён и
-создания методов, в Perl 5 нет простого способа программного создания классов.
-На помощь приходит Moose с входящей в него библиотекой C<Class::MOP>. Она
-предоставляет I<протокол метаобъектов> E<mdash> механизм для создания и
-манипулирования объектной системой в терминах её самой.
+Unlike installing function references to populate namespaces and to create
+methods, there's no simple way to create classes at runtime in Perl. Moose
+comes to the rescue, with its bundled C<Class::MOP> library. It provides a
+I<meta object protocol>--a mechanism for creating and manipulating an object
+system by manipulating objects.
 
-Вместо написания своего собственного хрупкого кода со строковым C<eval> или
-попыток вручную ковыряться в таблицах символов, вы можете манипулировать
-сущностями и абстракциями вашей программы с помощью объектов и методов:
+Rather than writing your own fragile string C<eval> code or trying to poke into
+symbol tables manually, you can manipulate the entities and abstractions of
+your program with objects and methods.
 
-Так создаётся класс:
+To create a class:
 
 =begin programlisting
 
@@ -328,7 +328,7 @@ X<meta object protocol>
 X<metaclass>
 X<OO; metaclass>
 
-Добавьте атрибуты и методы в этот класс, когда создадите его:
+Add attributes and methods to this class when you create it:
 
 =begin programlisting
 
@@ -350,30 +350,29 @@ X<OO; metaclass>
 
 =end programlisting
 
-E<hellip>или в метакласс (объект, представляющий этот класс), когда он будет
-создан:
+... or to the metaclass (the object which represents that class) once created:
 
 =begin programlisting
 
     $class->add_attribute(
-        experience  => Class::MOP::Attribute->new('$xp')
+        experience => Class::MOP::Attribute->new('$xp')
     );
 
     $class->add_method( bash_zombie => sub { ... } );
 
 =end programlisting
 
-E<hellip>и вы можете инспектировать метакласс:
+You can inspect the metaclass:
 
 =begin programlisting
 
-    my @attrs = $class->get_all_attributes();
-    my @meths = $class->get_all_methods();
+    my @attrs = $class->get_all_attributes;
+    my @meths = $class->get_all_methods;
 
 =end programlisting
 
 X<CPAN; C<Class::MOP::Attribute>>
 X<CPAN; C<Class::MOP::Method>>
 
-Аналогично, C<Class::MOP::Attribute> и C<Class::MOP::Method> позволяют вам
-создавать, манипулировать и анализировать атрибуты и методы.
+Similarly C<Class::MOP::Attribute> and C<Class::MOP::Method> allow you to
+create and manipulate and introspect attributes and methods.

@@ -1,13 +1,9 @@
-=encoding utf-8
+=head0 Perl Beyond Syntax
 
-=head0 Perl за пределами синтаксиса
-
-Детский Perl доведёт вас лишь до сюда. Беглость языка позволит вам использовать
-естественные шаблоны и идиомы языка. Эффективные программисты понимают, как
-возможности Perl взаимодействуют и сочетаются друг с другом.
-
-Приготовьтесь к второй кривой обучения Perl: Perl-мышление. Результатом будет
-лаконичный, мощный код в стиле Perl.
+Baby Perl can solve a lot of your problems, but it will only take you so far.
+Effective programmers understand how Perl's features interact and combine. This
+fluent Perl takes advantage of the language's natural patterns and idioms. The
+result of Perlish thinking is concise, powerful, and useful code.
 
 L<idioms>
 

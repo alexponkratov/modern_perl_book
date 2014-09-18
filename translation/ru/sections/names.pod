@@ -1,33 +1,30 @@
-=encoding utf-8
-
-=head1 Имена
+=head1 Names
 
 Z<names>
 
 X<names>
 X<identifiers>
 
-I<Имена> (или I<идентификаторы>) в программах на Perl повсюду: переменные,
-функции, пакеты, классы и даже дескрипторы файлов. Все эти имена начинаются с
-буквы или знака подчёркивания и могут включать любую комбинацию букв, цифр и
-знаков подчёркивания. Если задействована прагма C<utf8> (L<unicode>), вы можете
-использовать в идентификаторах любые словарные символы UTF-8. Всё это допустимые
-в Perl идентификаторы:
+I<Names> (or I<identifiers>) are everywhere in Perl programs: you get to choose
+them for variables, functions, packages, classes, and even filehandles. Valid
+Perl names all begin with a letter or an underscore and may optionally include
+any combination of letters, numbers, and underscores. When the C<utf8> pragma
+(L<unicode>) is in effect, you may use any UTF-8 word characters in
+identifiers. All of these are valid Perl identifiers:
 
 =begin programlisting
 
     my $name;
     my @_private_names;
     my %Names_to_Addresses;
-
     sub anAwkwardName3;
 
-    # с включенным use utf8;
+    # with use utf8; enabled
     package Ingy::DE<ouml>t::Net;
 
 =end programlisting
 
-Такие идентификаторы недопустимы в Perl:
+These are invalid Perl identifiers:
 
 =begin programlisting
 
@@ -41,23 +38,21 @@ I<Имена> (или I<идентификаторы>) в программах �
 
 X<symbolic lookups>
 
-I<Имена существуют в первую очередь для пользы программиста>. Эти правила
-применяются только к именам литералов, которые появляются в вашем исходном коде
-E<laquo>как естьE<raquo>, таким как C<sub fetch_pie> или C<my $waffleiron>.
-Только парсер Perl принуждает следовать правилам об именах идентификаторов.
+I<Names exist primarily for the benefit of the programmer>. These rules apply
+only to literal names which appear in your source code, such as C<sub
+fetch_pie> or C<my $waffleiron>. Only Perl's parser enforces the rules about
+identifier names. Perl allows you to refer to entities with names generated at
+runtime or provided as input to a program. These I<symbolic lookups> provide
+flexibility at the expense of safety.
 
-Динамическая натура Perl позволяет вам ссылаться на сущности с помощью имён,
-генерируемых во время исполнения или указанных как входные данные программы. Этот
-I<символьный поиск> обеспечивает гибкость ценой некоторого ущерба безопасности.
-В частности, непрямой вызов функций или методов или поиск символов в
-пространстве имён позволяет вам обойти парсер Perl.
+In particular, invoking functions or methods indirectly or looking up symbols
+in a namespace lets you bypass Perl's parser. Symbolic lookups can produce
+confusing code. As Mark Jason Dominus recommends so
+effectivelyN<U<http://perl.plover.com/varvarname.html>>, prefer a hash
+(L<hashes>) or nested data structure (L<nested_data_structures>) over variables
+named, for example, C<$recipe1>, C<$recipe2>, and so on.
 
-Такое поведение может привести к запутанному коду. Как эффективно рекомендует
-Марк Джейсон Доминус (Mark Jason
-Dominus)N<U<http://perl.plover.com/varvarname.html>>, лучше используйте хеши или
-вложенные структуры данных (L<nested_data_structures>).
-
-=head2 Имена переменных и сигилы
+=head2 Variable Names and Sigils
 
 X<variables; names>
 X<scalar variables>
@@ -69,11 +64,10 @@ X<hashes>
 X<variables; hashes>
 X<sigil>
 
-I<Имена переменных> всегда имеют предшествующий I<сигил> (или символ), который
-обозначает тип значения переменной. I<Скалярные переменные> (L<scalars>)
-используют знак доллара (C<$>). I<Переменные-массивы> (L<arrays>) используют
-знак E<laquo>atE<raquo> (E<laquo>собакаE<raquo>), (C<@>). I<Переменные-хеши>
-(L<hashes>) используют знак процента (C<%>):
+I<Variable names> always have a leading I<sigil> (a symbol) which indicates the
+type of the variable's value. I<Scalar variables> (L<scalars>) use the dollar
+sign (C<$>). I<Array variables> (L<arrays>) use the at sign (C<@>).  I<Hash
+variables> (L<hashes>) use the percent sign (C<%>):
 
 =begin programlisting
 
@@ -83,9 +77,9 @@ I<Имена переменных> всегда имеют предшеству�
 
 =end programlisting
 
-Эти сигилы обеспечивают визуальное разделение пространств имён для имён
-переменных. Возможно E<mdash> хотя это и может привести к путанице E<mdash>
-объявить несколько переменных с одним и тем же именем, но разными типами:
+Sigils allow you to separate variables into different namespaces. It's
+possible--though confusing--to declare multiple variables of the same name with
+different types:
 
 =begin programlisting
 
@@ -93,15 +87,15 @@ I<Имена переменных> всегда имеют предшеству�
 
 =end programlisting
 
-Хотя Perl и не будет сбит с толку, люди, читающие этот код, будут.
+Though Perl won't get confused, people reading this code will.
 
 X<variant sigils>
 
-Сигилы Perl 5 E<mdash> I<варьирующиеся сигилы>. Как контекст определяет, сколько
-элементов вы ожидаете от операции, или какого типа данные вы ожидаете получить,
-так и сигил определяет, как вы манипулируете данными переменной. Например, для
-доступа к единственному элементу массива или хеша вы должны использовать сигил
-скаляра (C<$>):
+The sigil of a variable can change depending on what you do with it; the term
+for this is I<variant sigils>. As context determines how many items you expect
+from an operation or what type of data you expect to get, so the sigil governs
+how you manipulate the data of a variable. For example, you must use the scalar
+sigil (C<$>) to access a single element of an array or a hash:
 
 =begin programlisting
 
@@ -116,17 +110,16 @@ X<variant sigils>
 X<lvalue>
 X<rvalue>
 
-Параллель с контекстом количества важна. Использование скалярного элемента
-структуры как I<lvalue>, левого значения (цель присвоения, находящаяся слева от
-знака C<=>), налагает скалярный контекст (L<context_philosophy>) на I<rvalue>,
-правое значение (присваемое значение, находящееся справа от знака C<=>).
+The parallel with amount context is important. Using a scalar element of an
+aggregate as an I<lvalue> (the target of an assignment; on the I<l>eft side of
+the C<=> character) imposes scalar context (L<context_philosophy>) on the
+I<rvalue> (the value assigned; on the I<r>ight side of the C<=> character).
 
 X<slices>
 
-Аналогично, доступ к нескольким элементам хеша или массива E<mdash> операция,
-известная как I<получение среза> E<mdash> использует символ C<@> и
-налагает списочный контекстN<E<hellip>даже если сам список содержит ноль или
-один элемент>:
+Similarly, accessing multiple elements of a hash or an array--an operation
+known as I<slicing>--uses the at symbol (C<@>) and imposes list contextN<...
+even if the list itself has zero or one elements>:
 
 =begin programlisting
 
@@ -138,43 +131,42 @@ X<slices>
 
 =end programlisting
 
-Наиболее надёжный способ определить тип переменной E<mdash> скаляр, массив или
-хеш E<mdash> обратить внимание на производимые с ней операции. Скаляры
-поддерживают все базовые операции, такие как строковые, числовые и булевы
-манипуляции. Массивы поддерживают доступ по индексу посредством квадратных
-скобок. Хеши поддерживают доступ по ключу посредством фигурных скобок.
+The most reliable way to determine the type of a variable--scalar, array, or
+hash--is to examine the operations performed on it. Scalars support all basic
+operations, such as string, numeric, and boolean manipulations. Arrays support
+indexed access through square brackets. Hashes support keyed access through
+curly brackets.
 
-=head2 Пространства имён
+=head2 Namespaces
 
 X<fully-qualified name>
 X<namespaces>
 
-Perl предоставляет механизм группировки сходных функций и переменных в их
-собственные уникальные именованные пространства E<mdash> I<пространства имён>
-(L<packages>). Пространство имён E<mdash> это именованная коллекция символов.
-Perl позволяет использование многоуровневых пространств имён, с именами,
-соединёнными двойным двоеточием (C<::>), где C<DessertShop::IceCream> ссылается
-на логическую коллекцию родственных переменных и функций, таких как C<scoop()>
-и C<pour_hot_fudge()>.
+Perl provides a mechanism to group similar functions and variables into their
+own unique named spaces--I<namespaces> (L<packages>). A namespace is collection
+of symbols grouped under a globally unique name. Perl allows multi-level
+namespaces, with names joined by double colons (C<::>), where
+C<DessertShop::IceCream> refers to a logical collection of related variables
+and functions, such as C<scoop()> and C<pour_hot_fudge()>.
 
-Внутри пространства имён вы можете использовать короткие имена его членов.
-Снаружи пространства имён ссылайтесь на его член, используя его I<полностью
-определённое имя>. Таким образом, C<add_sprinkles()> внутри
-C<DessertShop::IceCream> ссылается на ту же самую функцию, что и
-C<DessertShop::IceCream::add_sprinkles()> снаружи пространства имён.
+Within a namespace, you may use the short name of its members. Outside of the
+namespace, you must refer to a member by its I<fully-qualified name>.  Within
+C<DessertShop::IceCream>, C<add_sprinkles()> refers to the same function as
+does C<DessertShop::IceCream::add_sprinkles()> outside of the namespace.
 
-Хотя к именам пакетов применимы стандартные правила именования, по соглашению
-имена определённых пользователями пакетов начинаются с заглавных букв. Ядро Perl
-резервирует строчные имена пакетов для прагм ядра (L<pragmas>), таких как
-C<strict> и C<warnings>. Эта политика закреплена в первую очередь рекомендациями
-сообщества.
+While standard naming rules apply to package names, user-defined packages all
+start with uppercase letters by convention. The Perl core reserves lowercase
+package names for core pragmas (L<pragmas>), such as C<strict> and C<warnings>.
+This is a policy enforced primarily by community guidelines.
 
-Все пространства имён в Perl 5 глобально видимы. Когда Perl ищет символ в
-C<DessertShop::IceCream::Freezer>, он ищет в символьной таблице C<main::>
-символ, представляющий пространство имён C<DessertShop::>, затем в нём E<mdash>
-пространство имён C<IceCream::>, и так далее. C<Freezer::> видим снаружи
-пространства имён C<IceCream::>. Вложенность одного в другое E<mdash> всего лишь
-механизм хранения, и ничего не говорит об отношениях между родительскими и
-дочерними пакетами, или пакетами, находящимися на одном уровне. Только
-программист может сделать I<логические> отношения между сущностями очевидными
-E<mdash> выбрав хорошие имена и правильно их организовав.
+All namespaces in Perl are globally visible. When Perl looks up a symbol in
+C<DessertShop::IceCream::Freezer>, it looks in the C<main::> symbol table for a
+symbol representing the C<DessertShop::> namespace, then in that namespace for
+the C<IceCream::> namespace, and so on.  Yet C<Freezer::> is visible from
+outside of the C<IceCream::> namespace. Namespaces are all globally accessible.
+The nesting of the former within the latter is only a storage mechanism, and
+implies nothing further about relationships between parent and child or sibling
+packages.
+
+Only a programmer can make I<logical> relationships between entities
+obvious--by choosing good names and organizing them well.
